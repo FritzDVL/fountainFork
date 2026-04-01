@@ -15,7 +15,8 @@ export default async function WriteDraft({ params }: { params: { id: string } })
   const { data: draft } = await db.from("drafts").select("contentJson,yDoc").eq("documentId", params.id).single();
 
   const content = draft?.contentJson ?? defaultContent;
-  const collaborative = !!draft?.yDoc;
+  // DISABLED: Collaborative editing — always false, collab server not used
+  const collaborative = false; // was: !!draft?.yDoc;
 
   return (
     <ArticleLayout>

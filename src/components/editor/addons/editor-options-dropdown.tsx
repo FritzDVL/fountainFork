@@ -3,9 +3,10 @@
 import { useAuthenticatedUser } from "@lens-protocol/react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { DraftShareModal } from "@/components/draft/draft-share-modal";
-import { LinkIcon } from "@/components/icons/link";
+// DISABLED: Draft sharing feature — not used in forum mode
+// import { useState } from "react";
+// import { DraftShareModal } from "@/components/draft/draft-share-modal";
+// import { LinkIcon } from "@/components/icons/link";
 import { MenuIcon } from "@/components/icons/menu";
 import { AnimatedMenuItem } from "@/components/navigation/animated-item";
 import { Button } from "@/components/ui/button";
@@ -19,12 +20,14 @@ export const EditorOptionsDropdown = ({
   collaborative: boolean;
 }) => {
   const { open, onOpenChange } = useOpenState();
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  // DISABLED: Draft sharing feature
+  // const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const { data: user } = useAuthenticatedUser();
 
-  const onShare = () => {
-    setIsShareModalOpen(true);
-  };
+  // DISABLED: Draft sharing feature
+  // const onShare = () => {
+  //   setIsShareModalOpen(true);
+  // };
   const searchParams = useSearchParams();
   const isPreview = searchParams.has("preview");
 
@@ -40,7 +43,6 @@ export const EditorOptionsDropdown = ({
 
     onOpenChange(false);
   };
-  const onEditTheme = () => {};
 
   if (!user) {
     return null;
@@ -55,24 +57,23 @@ export const EditorOptionsDropdown = ({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent className="w-48" portal align="end">
+        {/* DISABLED: Draft sharing feature
         <AnimatedMenuItem icon={LinkIcon} onClick={onShare}>
           Share draft
         </AnimatedMenuItem>
+        */}
         <AnimatedMenuItem icon={isPreview ? EyeOffIcon : EyeIcon} onClick={onPreview}>
           {isPreview ? "Exit preview" : "Preview post"}
         </AnimatedMenuItem>
-        {/* <Link href={"/settings/theme"} prefetch>
-          <AnimatedMenuItem icon={BrushIcon} onClick={onEditTheme}>
-            Edit theme
-          </AnimatedMenuItem>
-        </Link> */}
       </DropdownMenuContent>
+      {/* DISABLED: Draft sharing feature
       <DraftShareModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         documentId={documentId}
         collaborative={collaborative}
       />
+      */}
     </DropdownMenu>
   );
 };
