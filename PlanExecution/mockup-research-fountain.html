@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔒 Research — Society Protocol</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: hsl(222.2 84% 4.9%); --fg: hsl(210 40% 98%);
+    --muted: hsl(217.2 32.6% 17.5%); --muted-fg: hsl(215 20.2% 65.1%);
+    --border: hsl(217.2 32.6% 17.5%); --primary: hsl(210 40% 98%);
+    --primary-fg: hsl(222.2 47.4% 11.2%); --radius: 0.5rem;
+    --research-accent: hsl(45 80% 55%);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--fg); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+
+  .header { position: sticky; top: 0; z-index: 50; background: hsla(222.2,84%,4.9%,0.7); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); height: 56px; }
+  .header-inner { max-width: 960px; margin: 0 auto; padding: 0 16px; height: 100%; display: flex; align-items: center; justify-content: space-between; }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo { font-weight: 700; font-size: 15px; }
+  .header-search { background: var(--muted); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 12px; color: var(--muted-fg); font-size: 13px; width: 200px; outline: none; font-family: inherit; }
+  .header-search::placeholder { color: var(--muted-fg); opacity: 0.6; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 16px; height: 36px; border-radius: 6px; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: transparent; color: var(--fg); }
+  .btn:hover { background: var(--muted); }
+  .btn-primary { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-ghost { border: none; }
+  .btn-ghost:hover { background: var(--muted); }
+  .btn-sm { height: 32px; padding: 0 12px; font-size: 12px; }
+  .btn-research { background: hsla(45,80%,55%,0.15); border-color: hsla(45,80%,55%,0.4); color: var(--research-accent); }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--muted); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--muted-fg); }
+
+  .page { max-width: 960px; margin: 0 auto; padding: 32px 16px; }
+
+  .research-header { margin-bottom: 8px; }
+  .research-header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+  .research-header p { font-size: 13px; color: var(--muted-fg); margin-top: 2px; }
+
+  /* FILTER TOOLBAR — Discourse style */
+  .toolbar { display: flex; align-items: center; gap: 8px; margin: 20px 0; padding-bottom: 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .dropdown-trigger {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: 1px solid var(--border); background: transparent;
+    color: var(--fg); font-family: inherit; transition: background 0.1s;
+  }
+  .dropdown-trigger:hover { background: var(--muted); }
+  .dropdown-trigger .arrow { font-size: 9px; color: var(--muted-fg); margin-left: 2px; }
+
+  /* Category box (square, not circle) */
+  .cat-box { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .cat-architecture { background: #3b82f6; }
+  .cat-state-machine { background: #a855f7; }
+  .cat-consensus { background: #f97316; }
+  .cat-cryptography { background: #ef4444; }
+  .cat-account-system { background: #06b6d4; }
+  .cat-security { background: #eab308; }
+  .cat-game-theory { background: #10b981; }
+
+  .tab-active {
+    padding: 6px 12px; font-size: 13px; font-weight: 600;
+    color: var(--fg); border: none; background: none; cursor: pointer;
+    font-family: inherit; border-bottom: 2px solid var(--fg); padding-bottom: 4px;
+  }
+  .toolbar-right { margin-left: auto; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; }
+  thead th { padding: 8px 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-fg); text-align: left; border-bottom: 1px solid var(--border); }
+  thead th.center { text-align: center; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; cursor: pointer; }
+  tbody tr:hover { background: var(--muted); }
+  tbody tr:last-child { border-bottom: none; }
+  td { padding: 14px 12px; vertical-align: middle; }
+  .td-topic { width: 55%; }
+  .td-author { width: 14%; }
+  .td-num { width: 9%; text-align: center; font-size: 13px; color: var(--muted-fg); }
+  .td-time { width: 10%; text-align: center; font-size: 12px; color: var(--muted-fg); }
+
+  .topic-title { font-size: 14px; font-weight: 500; color: var(--fg); display: block; }
+  .topic-title:hover { opacity: 0.8; }
+
+  /* Category badge + tags (Discourse style) */
+  .topic-meta { margin-top: 5px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .category-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 500; color: var(--fg);
+    background: var(--muted); padding: 2px 8px; border-radius: 4px;
+  }
+  .category-badge .cat-box { width: 8px; height: 8px; }
+  .tag-badge {
+    font-size: 11px; color: var(--muted-fg);
+    padding: 1px 7px; border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  .author-cell { display: flex; align-items: center; gap: 6px; }
+  .author-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; }
+  .author-name { font-size: 13px; color: var(--muted-fg); }
+
+  .load-more { display: flex; justify-content: center; padding: 24px 0; }
+
+  @media (max-width: 768px) {
+    .td-author, .td-num, .td-time { display: none; }
+    .td-topic { width: 100%; }
+    .header-search { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="header"><div class="header-inner"><div class="header-left"><a href="mockup-landing-fountain.html" class="logo">Society Protocol</a><input type="text" class="header-search" placeholder="Search threads..."><a href="#" class="btn btn-research btn-sm">🔒 Research</a></div><div class="header-right"><a href="#" class="btn btn-ghost btn-sm">🔔</a><div class="avatar">U</div></div></div></header>
+
+<div class="page">
+  <div class="research-header">
+    <h1>🔒 Society Protocol Research</h1>
+    <p>Technical research and discussion — token-gated posting</p>
+  </div>
+
+  <div class="toolbar">
+    <button class="dropdown-trigger"><span class="cat-box" style="background: transparent; border: 1px solid var(--muted-fg);"></span> All Categories <span class="arrow">▾</span></button>
+    <button class="dropdown-trigger">All Tags <span class="arrow">▾</span></button>
+    <button class="tab-active">Latest</button>
+    <div class="toolbar-right"><a href="#" class="btn btn-primary btn-sm">+ New Topic</a></div>
+  </div>
+
+  <table>
+    <thead><tr><th>Topic</th><th>Started by</th><th class="center">Replies</th><th class="center">Views</th><th class="center">Activity</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="td-topic">
+          <a href="#" class="topic-title">Proof of Hunt consensus mechanism — formal analysis</a>
+          <div class="topic-meta">
+            <span class="category-badge"><span class="cat-box cat-consensus"></span>Consensus</span>
+            <span class="tag-badge">#hunting</span>
+            <span class="tag-badge">#game-theory</span>
+          </div>
+        </td>
+        <td class="td-author"><div class="author-cell"><span class="author-dot"></span><span class="author-name">alice</span></div></td>
+        <td class="td-num">12</td><td class="td-num">230</td><td class="td-time">3h</td>
+      </tr>
+      <tr>
+        <td class="td-topic">
+          <a href="#" class="topic-title">State machine formal verification approach for protocol transitions</a>
+          <div class="topic-meta">
+            <span class="category-badge"><span class="cat-box cat-state-machine"></span>State Machine</span>
+          </div>
+        </td>
+        <td class="td-author"><div class="author-cell"><span class="author-dot"></span><span class="author-name">bob</span></div></td>
+        <td class="td-num">5</td><td class="td-num">89</td><td class="td-time">1d</td>
+      </tr>
+      <tr>
+        <td class="td-topic">
+          <a href="#" class="topic-title">ZK-SNARK integration for privacy-preserving account verification</a>
+          <div class="topic-meta">
+            <span class="category-badge"><span class="cat-box cat-cryptography"></span>Cryptography</span>
+            <span class="tag-badge">#zk</span>
+            <span class="tag-badge">#account-system</span>
+          </div>
+        </td>
+        <td class="td-author"><div class="author-cell"><span class="author-dot"></span><span class="author-name">carol</span></div></td>
+        <td class="td-num">8</td><td class="td-num">145</td><td class="td-time">2d</td>
+      </tr>
+      <tr>
+        <td class="td-topic">
+          <a href="#" class="topic-title">Economic incentive model for validator participation</a>
+          <div class="topic-meta">
+            <span class="category-badge"><span class="cat-box cat-game-theory"></span>Game Theory</span>
+            <span class="tag-badge">#economics</span>
+          </div>
+        </td>
+        <td class="td-author"><div class="author-cell"><span class="author-dot"></span><span class="author-name">dave</span></div></td>
+        <td class="td-num">3</td><td class="td-num">67</td><td class="td-time">4d</td>
+      </tr>
+      <tr>
+        <td class="td-topic">
+          <a href="#" class="topic-title">Threat model for cross-shard communication</a>
+          <div class="topic-meta">
+            <span class="category-badge"><span class="cat-box cat-security"></span>Security</span>
+            <span class="tag-badge">#architecture</span>
+          </div>
+        </td>
+        <td class="td-author"><div class="author-cell"><span class="author-dot"></span><span class="author-name">eve</span></div></td>
+        <td class="td-num">6</td><td class="td-num">112</td><td class="td-time">5d</td>
+      </tr>
+      <tr>
+        <td class="td-topic">
+          <a href="#" class="topic-title">Account abstraction proposal — separating identity from keys</a>
+          <div class="topic-meta">
+            <span class="category-badge"><span class="cat-box cat-account-system"></span>Account System</span>
+            <span class="tag-badge">#security</span>
+            <span class="tag-badge">#cryptography</span>
+          </div>
+        </td>
+        <td class="td-author"><div class="author-cell"><span class="author-dot"></span><span class="author-name">frank</span></div></td>
+        <td class="td-num">7</td><td class="td-num">98</td><td class="td-time">1w</td>
+      </tr>
+      <tr>
+        <td class="td-topic">
+          <a href="#" class="topic-title">General architecture discussion — modular vs monolithic</a>
+          <div class="topic-meta">
+            <span class="category-badge"><span class="cat-box cat-architecture"></span>Architecture</span>
+          </div>
+        </td>
+        <td class="td-author"><div class="author-cell"><span class="author-dot"></span><span class="author-name">grace</span></div></td>
+        <td class="td-num">15</td><td class="td-num">203</td><td class="td-time">1w</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="load-more"><a href="#" class="btn btn-sm">Load More</a></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beginners & Help — Society Protocol</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: hsl(222.2 84% 4.9%); --fg: hsl(210 40% 98%);
+    --muted: hsl(217.2 32.6% 17.5%); --muted-fg: hsl(215 20.2% 65.1%);
+    --border: hsl(217.2 32.6% 17.5%); --primary: hsl(210 40% 98%);
+    --primary-fg: hsl(222.2 47.4% 11.2%); --radius: 0.5rem;
+    --research-accent: hsl(45 80% 55%);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--fg); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+
+  .header { position: sticky; top: 0; z-index: 50; background: hsla(222.2,84%,4.9%,0.7); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); height: 56px; }
+  .header-inner { max-width: 960px; margin: 0 auto; padding: 0 16px; height: 100%; display: flex; align-items: center; justify-content: space-between; }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo { font-weight: 700; font-size: 15px; }
+  .header-search { background: var(--muted); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 12px; color: var(--muted-fg); font-size: 13px; width: 200px; outline: none; font-family: inherit; }
+  .header-search::placeholder { color: var(--muted-fg); opacity: 0.6; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 16px; height: 36px; border-radius: 6px; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: transparent; color: var(--fg); }
+  .btn:hover { background: var(--muted); }
+  .btn-primary { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-ghost { border: none; }
+  .btn-ghost:hover { background: var(--muted); }
+  .btn-sm { height: 32px; padding: 0 12px; font-size: 12px; }
+  .btn-research { background: hsla(45,80%,55%,0.1); border-color: hsla(45,80%,55%,0.3); color: var(--research-accent); }
+  .btn-research:hover { background: hsla(45,80%,55%,0.15); }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--muted); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--muted-fg); }
+
+  .page { max-width: 960px; margin: 0 auto; padding: 32px 16px; }
+  .breadcrumb { font-size: 13px; color: var(--muted-fg); margin-bottom: 20px; }
+  .breadcrumb a { color: var(--fg); opacity: 0.7; }
+  .breadcrumb a:hover { opacity: 1; text-decoration: underline; }
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+  .page-header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  .page-header p { font-size: 13px; color: var(--muted-fg); margin-top: 2px; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    padding: 8px 12px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--muted-fg); text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  thead th.center { text-align: center; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; cursor: pointer; }
+  tbody tr:hover { background: var(--muted); }
+  tbody tr:last-child { border-bottom: none; }
+  td { padding: 14px 12px; vertical-align: middle; }
+  .td-topic { width: 55%; }
+  .td-author { width: 14%; }
+  .td-num { width: 9%; text-align: center; font-size: 13px; color: var(--muted-fg); }
+  .td-time { width: 10%; text-align: center; font-size: 12px; color: var(--muted-fg); }
+
+  .topic-title { font-size: 14px; font-weight: 500; color: var(--fg); }
+  .topic-title:hover { opacity: 0.8; }
+  .pin { margin-right: 6px; font-size: 12px; }
+
+  .author-cell { display: flex; align-items: center; gap: 6px; }
+  .author-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; }
+  .author-name { font-size: 13px; color: var(--muted-fg); }
+
+  .load-more { display: flex; justify-content: center; padding: 24px 0; }
+
+  @media (max-width: 768px) {
+    .td-author, .td-num, .td-time { display: none; }
+    .td-topic { width: 100%; }
+    .header-search { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="header"><div class="header-inner"><div class="header-left"><a href="mockup-landing-fountain.html" class="logo">Society Protocol</a><input type="text" class="header-search" placeholder="Search threads..."><a href="mockup-research-fountain.html" class="btn btn-research btn-sm">🔒 Research</a></div><div class="header-right"><a href="#" class="btn btn-ghost btn-sm">🔔</a><div class="avatar">U</div></div></div></header>
+
+<div class="page">
+  <div class="breadcrumb"><a href="mockup-landing-fountain.html">Boards</a> / Beginners & Help</div>
+  <div class="page-header">
+    <div><h1>Beginners & Help</h1><p>New to the forum? Start here.</p></div>
+    <a href="#" class="btn btn-primary btn-sm">+ New Thread</a>
+  </div>
+
+  <table>
+    <thead><tr><th>Topic</th><th>Started by</th><th class="center">Replies</th><th class="center">Views</th><th class="center">Activity</th></tr></thead>
+    <tbody>
+      <tr><td class="td-topic"><a href="#" class="topic-title"><span class="pin">📌</span>Welcome to the forum — read this first</a></td><td class="td-author"><div class="author-cell"><span class="author-dot"></span><span class="author-name">alice</span></div></td><td class="td-num">24</td><td class="td-num">340</td><td class="td-time">2h</td></tr>
+      <tr><td class="td-topic"><a href="#" class="topic-title">How do I create a Lens account?</a></td><td class="td-author"><div class="author-cell"><span class="author-dot"></span><span class="author-name">bob</span></div></td><td class="td-num">8</td><td class="td-num">120</td><td class="td-time">5h</td></tr>
+      <tr><td class="td-topic"><a href="#" class="topic-title">What is GHO token and how does it work?</a></td><td class="td-author"><div class="author-cell"><span class="author-dot"></span><span class="author-name">carol</span></div></td><td class="td-num">3</td><td class="td-num">45</td><td class="td-time">1d</td></tr>
+      <tr><td class="td-topic"><a href="#" class="topic-title">First time posting here — hello everyone!</a></td><td class="td-author"><div class="author-cell"><span class="author-dot"></span><span class="author-name">dave</span></div></td><td class="td-num">1</td><td class="td-num">22</td><td class="td-time">3d</td></tr>
+      <tr><td class="td-topic"><a href="#" class="topic-title">Help with wallet setup on mobile</a></td><td class="td-author"><div class="author-cell"><span class="author-dot"></span><span class="author-name">eve</span></div></td><td class="td-num">0</td><td class="td-num">10</td><td class="td-time">5d</td></tr>
+      <tr><td class="td-topic"><a href="#" class="topic-title">Difference between L1 and L2 — explained simply?</a></td><td class="td-author"><div class="author-cell"><span class="author-dot"></span><span class="author-name">frank</span></div></td><td class="td-num">6</td><td class="td-num">89</td><td class="td-time">1w</td></tr>
+    </tbody>
+  </table>
+  <div class="load-more"><a href="#" class="btn btn-sm">Load More</a></div>
+</div>
+</body>
+</html>

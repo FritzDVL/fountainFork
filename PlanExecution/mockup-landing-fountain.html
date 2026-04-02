@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Society Protocol Forum — Fountain Style</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===== FOUNTAIN DESIGN TOKENS ===== */
+  :root {
+    --bg: hsl(222.2 84% 4.9%);
+    --fg: hsl(210 40% 98%);
+    --card: hsl(222.2 84% 4.9%);
+    --card-fg: hsl(210 40% 98%);
+    --muted: hsl(217.2 32.6% 17.5%);
+    --muted-fg: hsl(215 20.2% 65.1%);
+    --border: hsl(217.2 32.6% 17.5%);
+    --accent: hsl(217.2 32.6% 17.5%);
+    --accent-fg: hsl(210 40% 98%);
+    --primary: hsl(210 40% 98%);
+    --primary-fg: hsl(222.2 47.4% 11.2%);
+    --secondary: hsl(217.2 32.6% 17.5%);
+    --secondary-fg: hsl(210 40% 98%);
+    --destructive: hsl(0 62.8% 30.6%);
+    --ring: hsl(212.7 26.8% 83.9%);
+    --radius: 0.5rem;
+    --research-accent: hsl(45 80% 55%);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  /* ===== HEADER (matches Fountain's header.tsx) ===== */
+  .header {
+    position: sticky; top: 0; z-index: 50;
+    background: hsla(222.2, 84%, 4.9%, 0.7);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    height: 56px;
+  }
+  .header-inner {
+    max-width: 960px; margin: 0 auto; padding: 0 16px;
+    height: 100%; display: flex; align-items: center; justify-content: space-between;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo {
+    font-weight: 700; font-size: 15px; letter-spacing: -0.3px;
+    color: var(--fg);
+  }
+  .header-search {
+    background: var(--muted); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 6px 12px;
+    color: var(--muted-fg); font-size: 13px; width: 200px;
+    outline: none; font-family: inherit;
+  }
+  .header-search::placeholder { color: var(--muted-fg); opacity: 0.6; }
+  .header-search:focus { border-color: var(--ring); }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 0 16px; height: 36px; border-radius: 6px;
+    font-size: 13px; font-weight: 500; font-family: inherit;
+    cursor: pointer; transition: all 0.15s;
+    border: 1px solid var(--border); background: transparent; color: var(--fg);
+  }
+  .btn:hover { background: var(--muted); }
+  .btn-primary {
+    background: var(--primary); color: var(--primary-fg);
+    border-color: var(--primary);
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-ghost { border: none; }
+  .btn-ghost:hover { background: var(--muted); }
+  .btn-research {
+    background: hsla(45, 80%, 55%, 0.1);
+    border-color: hsla(45, 80%, 55%, 0.3);
+    color: var(--research-accent);
+  }
+  .btn-research:hover { background: hsla(45, 80%, 55%, 0.15); }
+  .btn-sm { height: 32px; padding: 0 12px; font-size: 12px; }
+
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--muted); display: flex; align-items: center;
+    justify-content: center; font-size: 12px; color: var(--muted-fg);
+    font-weight: 500;
+  }
+
+  /* ===== PAGE ===== */
+  .page { max-width: 960px; margin: 0 auto; padding: 32px 16px; }
+
+  /* ===== SECTION BLOCKS ===== */
+  .section {
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 10px 16px;
+    background: var(--muted);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--muted-fg);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-header-bar {
+    width: 3px; height: 14px; border-radius: 2px;
+    background: var(--muted-fg); flex-shrink: 0;
+  }
+
+  /* ===== CATEGORY ROW ===== */
+  .cat-row {
+    display: flex; align-items: center; padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    transition: background 0.1s; cursor: pointer;
+  }
+  .cat-row:hover { background: var(--muted); }
+  .cat-info { flex: 1; min-width: 0; }
+  .cat-name { font-size: 14px; font-weight: 500; color: var(--fg); }
+  .cat-row:hover .cat-name { color: var(--primary); }
+  .cat-desc {
+    font-size: 12px; color: var(--muted-fg);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-top: 1px;
+  }
+  .cat-stats { display: flex; align-items: center; gap: 20px; margin-left: 16px; flex-shrink: 0; }
+  .cat-stat { text-align: center; min-width: 48px; }
+  .cat-stat-num { font-size: 13px; font-weight: 600; color: var(--fg); }
+  .cat-stat-label { font-size: 10px; color: var(--muted-fg); letter-spacing: 0.03em; }
+  .cat-time { font-size: 12px; color: var(--muted-fg); min-width: 56px; text-align: right; }
+
+  /* ===== GRID (Functions) ===== */
+  .grid-body { padding: 10px; }
+  .grid-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .grid-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .grid-row-3:last-child { margin-bottom: 0; }
+  .grid-card {
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px 14px; display: flex; align-items: center; gap: 8px;
+    cursor: pointer; transition: all 0.1s; background: transparent;
+  }
+  .grid-card:hover { background: var(--muted); }
+  .grid-icon { font-size: 12px; color: var(--muted-fg); }
+  .grid-label { font-size: 13px; font-weight: 500; color: var(--fg); }
+
+  /* ===== LANGUAGE COMMUNITIES ===== */
+  .local-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--muted-fg); margin-bottom: 12px;
+  }
+  .local-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .community-card {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; text-align: center; cursor: pointer;
+    transition: all 0.15s; background: transparent;
+  }
+  .community-card:hover { background: var(--muted); border-color: var(--muted-fg); }
+  .community-avatar {
+    width: 48px; height: 48px; border-radius: 10px;
+    background: var(--muted); margin: 0 auto 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+  }
+  .community-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .community-members { font-size: 12px; color: var(--muted-fg); margin-bottom: 6px; }
+  .community-desc {
+    font-size: 12px; color: var(--muted-fg); opacity: 0.7;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .cat-stats, .cat-time { display: none; }
+    .grid-row-2 { grid-template-columns: 1fr; }
+    .grid-row-3 { grid-template-columns: 1fr 1fr; }
+    .local-grid { grid-template-columns: 1fr 1fr; }
+    .header-search { display: none; }
+  }
+  @media (max-width: 480px) {
+    .grid-row-3 { grid-template-columns: 1fr; }
+    .local-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="header-left">
+      <a href="#" class="logo">Society Protocol</a>
+      <input type="text" class="header-search" placeholder="Search threads...">
+      <a href="#" class="btn btn-research btn-sm">🔒 Research</a>
+    </div>
+    <div class="header-right">
+      <a href="#" class="btn btn-ghost btn-sm">🔔</a>
+      <div class="avatar">U</div>
+    </div>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- 1. GENERAL DISCUSSION -->
+  <div class="section">
+    <div class="section-header"><span class="section-header-bar"></span>General Discussion</div>
+    <a href="mockup-board-fountain.html" class="cat-row"><div class="cat-info"><div class="cat-name">Beginners & Help</div><div class="cat-desc">New to the forum? Start here.</div></div><div class="cat-stats"><div class="cat-stat"><div class="cat-stat-num">12</div><div class="cat-stat-label">threads</div></div><div class="cat-stat"><div class="cat-stat-num">340</div><div class="cat-stat-label">views</div></div></div><div class="cat-time">2h ago</div></a>
+    <a href="#" class="cat-row"><div class="cat-info"><div class="cat-name">4 Key Concepts</div><div class="cat-desc">Core concepts and fundamental principles.</div></div><div class="cat-stats"><div class="cat-stat"><div class="cat-stat-num">5</div><div class="cat-stat-label">threads</div></div><div class="cat-stat"><div class="cat-stat-num">120</div><div class="cat-stat-label">views</div></div></div><div class="cat-time">1d ago</div></a>
+    <a href="#" class="cat-row"><div class="cat-info"><div class="cat-name">Web3 Outpost</div><div class="cat-desc">Web3 integration, badges, and specs.</div></div><div class="cat-stats"><div class="cat-stat"><div class="cat-stat-num">3</div><div class="cat-stat-label">threads</div></div><div class="cat-stat"><div class="cat-stat-num">87</div><div class="cat-stat-label">views</div></div></div><div class="cat-time">3d ago</div></a>
+    <a href="#" class="cat-row"><div class="cat-info"><div class="cat-name">DAO Governance</div><div class="cat-desc">Governance discussions and proposals.</div></div><div class="cat-stats"><div class="cat-stat"><div class="cat-stat-num">8</div><div class="cat-stat-label">threads</div></div><div class="cat-stat"><div class="cat-stat-num">210</div><div class="cat-stat-label">views</div></div></div><div class="cat-time">5h ago</div></a>
+  </div>
+
+  <!-- 2. FUNCTIONS (VALUE SYSTEM) -->
+  <div class="section">
+    <div class="section-header"><span class="section-header-bar"></span>Functions (Value System)</div>
+    <div class="grid-body">
+      <div class="grid-row-2">
+        <a href="#" class="grid-card"><span class="grid-icon">✦</span><span class="grid-label">Economic Game Theory</span></a>
+        <a href="#" class="grid-card"><span class="grid-icon">✦</span><span class="grid-label">Function Ideas</span></a>
+      </div>
+      <div class="grid-row-3">
+        <a href="#" class="grid-card"><span class="grid-icon">✦</span><span class="grid-label">Hunting</span></a>
+        <a href="#" class="grid-card"><span class="grid-icon">✦</span><span class="grid-label">Property</span></a>
+        <a href="#" class="grid-card"><span class="grid-icon">✦</span><span class="grid-label">Parenting</span></a>
+      </div>
+      <div class="grid-row-3">
+        <a href="#" class="grid-card"><span class="grid-icon">✦</span><span class="grid-label">Governance</span></a>
+        <a href="#" class="grid-card"><span class="grid-icon">✦</span><span class="grid-label">Organizations</span></a>
+        <a href="#" class="grid-card"><span class="grid-icon">✦</span><span class="grid-label">Curation</span></a>
+      </div>
+      <div class="grid-row-3">
+        <a href="#" class="grid-card"><span class="grid-icon">✦</span><span class="grid-label">Farming</span></a>
+        <a href="#" class="grid-card"><span class="grid-icon">✦</span><span class="grid-label">Portal</span></a>
+        <a href="#" class="grid-card"><span class="grid-icon">✦</span><span class="grid-label">Communication</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. OTHERS -->
+  <div class="section">
+    <div class="section-header"><span class="section-header-bar"></span>Others</div>
+    <a href="#" class="cat-row"><div class="cat-info"><div class="cat-name">Meta-discussion</div><div class="cat-desc">About the forum itself.</div></div><div class="cat-stats"><div class="cat-stat"><div class="cat-stat-num">2</div><div class="cat-stat-label">threads</div></div><div class="cat-stat"><div class="cat-stat-num">45</div><div class="cat-stat-label">views</div></div></div><div class="cat-time">6h ago</div></a>
+    <a href="#" class="cat-row"><div class="cat-info"><div class="cat-name">Politics & Society</div><div class="cat-desc">Political impacts on society.</div></div><div class="cat-stats"><div class="cat-stat"><div class="cat-stat-num">4</div><div class="cat-stat-label">threads</div></div><div class="cat-stat"><div class="cat-stat-num">98</div><div class="cat-stat-label">views</div></div></div><div class="cat-time">2d ago</div></a>
+    <a href="#" class="cat-row"><div class="cat-info"><div class="cat-name">Economics</div><div class="cat-desc">Economic models and theories.</div></div><div class="cat-stats"><div class="cat-stat"><div class="cat-stat-num">6</div><div class="cat-stat-label">threads</div></div><div class="cat-stat"><div class="cat-stat-num">134</div><div class="cat-stat-label">views</div></div></div><div class="cat-time">1d ago</div></a>
+    <a href="#" class="cat-row"><div class="cat-info"><div class="cat-name">Cryptocurrencies & Web3</div><div class="cat-desc">The broader crypto landscape.</div></div><div class="cat-stats"><div class="cat-stat"><div class="cat-stat-num">9</div><div class="cat-stat-label">threads</div></div><div class="cat-stat"><div class="cat-stat-num">267</div><div class="cat-stat-label">views</div></div></div><div class="cat-time">4h ago</div></a>
+    <a href="#" class="cat-row"><div class="cat-info"><div class="cat-name">Off-topic</div><div class="cat-desc">Anything unrelated to the protocol.</div></div><div class="cat-stats"><div class="cat-stat"><div class="cat-stat-num">15</div><div class="cat-stat-label">threads</div></div><div class="cat-stat"><div class="cat-stat-num">412</div><div class="cat-stat-label">views</div></div></div><div class="cat-time">30m ago</div></a>
+  </div>
+
+  <!-- 4. PARTNER COMMUNITIES -->
+  <div class="section">
+    <div class="section-header"><span class="section-header-bar"></span>Partner Communities</div>
+    <a href="#" class="cat-row"><div class="cat-info"><div class="cat-name">General Discussion</div><div class="cat-desc">Partner community discussions.</div></div><div class="cat-stats"><div class="cat-stat"><div class="cat-stat-num">3</div><div class="cat-stat-label">threads</div></div><div class="cat-stat"><div class="cat-stat-num">56</div><div class="cat-stat-label">views</div></div></div><div class="cat-time">1d ago</div></a>
+    <a href="#" class="cat-row"><div class="cat-info"><div class="cat-name">Announcements</div><div class="cat-desc">Official partner news and updates.</div></div><div class="cat-stats"><div class="cat-stat"><div class="cat-stat-num">7</div><div class="cat-stat-label">threads</div></div><div class="cat-stat"><div class="cat-stat-num">189</div><div class="cat-stat-label">views</div></div></div><div class="cat-time">12h ago</div></a>
+    <a href="#" class="cat-row"><div class="cat-info"><div class="cat-name">Network States</div><div class="cat-desc">Current and upcoming network states.</div></div><div class="cat-stats"><div class="cat-stat"><div class="cat-stat-num">2</div><div class="cat-stat-label">threads</div></div><div class="cat-stat"><div class="cat-stat-num">34</div><div class="cat-stat-label">views</div></div></div><div class="cat-time">5d ago</div></a>
+    <a href="#" class="cat-row"><div class="cat-info"><div class="cat-name">Partner Badges & SPEC</div><div class="cat-desc">Badge systems for partners.</div></div><div class="cat-stats"><div class="cat-stat"><div class="cat-stat-num">1</div><div class="cat-stat-label">threads</div></div><div class="cat-stat"><div class="cat-stat-num">22</div><div class="cat-stat-label">views</div></div></div><div class="cat-time">1w ago</div></a>
+  </div>
+
+  <!-- 5. LANGUAGE BOARDS -->
+  <div class="local-title">Language Boards</div>
+  <div class="local-grid">
+    <div class="community-card"><div class="community-avatar">🇪🇸</div><div class="community-name">Español</div><div class="community-members">42 members</div><div class="community-desc">Comunidad hispanohablante del protocolo.</div></div>
+    <div class="community-card"><div class="community-avatar">🇧🇷</div><div class="community-name">Português</div><div class="community-members">18 members</div><div class="community-desc">Comunidade lusófona do protocolo.</div></div>
+    <div class="community-card"><div class="community-avatar">🇨🇳</div><div class="community-name">中文</div><div class="community-members">7 members</div><div class="community-desc">中文社区讨论协议相关话题。</div></div>
+  </div>
+
+</div>
+</body>
+</html>
