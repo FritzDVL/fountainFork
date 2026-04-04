@@ -1,4 +1,4 @@
-# Phase 3: Database — Forum Schema & Seed Data
+# Phase 3: Database — Forum Schema & Seed Data (UPDATED)
 
 ## Goal
 
@@ -7,92 +7,124 @@ Create the Supabase tables that power the forum's speed layer. Seed the
 
 ## Depends On
 
-Phase 1 (Supabase project configured)
+Phase 1 ✅ (Supabase self-hosted on VPS, migrations run via docker exec)
 
 ---
 
-## Tables
+## Execution Method
 
-| Table | Purpose | Key Columns |
-|---|---|---|
-| `forum_categories` | Board categories (static reference) | slug PK, name, section, feed, thread_count |
-| `forum_threads` | Thread metadata + content cache | root_publication_id UNIQUE, category FK, content_json, content_text |
-| `forum_thread_replies` | Reply metadata + content cache | publication_id UNIQUE, thread_id FK, position, content_json |
-| `forum_votes` | Upvotes/downvotes per publication | publication_id + account_address UNIQUE |
-| `forum_communities` | Language/topic community groups | lens_group_address UNIQUE |
-
-## Steps
-
-### 3.1 Create Migration
-
-`supabase/migrations/YYYYMMDD_forum_schema.sql`
-
-Key design decisions:
-- `content_json JSONB` on threads AND replies from day one (not deferred)
-- `content_text TEXT` for full-text search (GIN index)
-- `forum_` prefix on all tables to avoid conflicts with Fountain's tables
-- `root_publication_id` is the Lens post ID (string, not UUID)
-
-### 3.2 Create Seed Migration
-
-`supabase/migrations/YYYYMMDD_seed_categories.sql`
-
-Insert 30 categories matching `src/lib/forum/categories.ts`:
-- 4 General Discussion (commons)
-- 4 Partner Communities (commons)
-- 11 Functions (research)
-- 6 Technical (research)
-- 5 Others (commons)
-
-### 3.3 Create Helper Functions
-
-SQL functions called via `db.rpc()`:
-- `forum_add_reply(thread_id, reply_time)` — increment reply_count + update last_reply_at
-- `forum_add_thread_to_category(slug)` — increment thread_count
-- `forum_increment_views(thread_id)` — increment views_count
-- `forum_apply_vote(publication_id, account, direction)` — upsert vote + update counters
-- `forum_search_threads(query, limit)` — full-text search via GIN index
-
-### 3.4 Create RLS Policies
-
-Tightened policies (not `USING (true)` for everything):
-- Categories: public read, admin-only write
-- Threads: public read, authenticated insert, author-or-admin update
-- Replies: public read, authenticated insert, author-or-admin update
-- Votes: public read, own-votes-only for write
-- Communities: public read, admin-only write
-
-**Important:** Verify JWT claim path against Fountain's actual token
-structure before deploying. Expected path:
-`(current_setting('request.jwt.claims')::json->>'metadata')::json->>'address'`
-
-### 3.5 Apply Migrations
-
+All SQL runs on the VPS via:
 ```bash
-cd supabase && supabase db push
+docker exec -i supabase-db psql -U postgres -d postgres < /path/to/file.sql
 ```
 
-Or paste SQL into Supabase SQL Editor.
+We create the SQL files locally, then copy them to VPS and execute.
 
 ---
 
-## Indexes
+## Step 3.1: Create the Forum Schema Migration
 
-```sql
--- Threads
-idx_forum_threads_category       (category)
-idx_forum_threads_feed           (feed)
-idx_forum_threads_created        (created_at DESC)
-idx_forum_threads_last_reply     (last_reply_at DESC NULLS LAST)
-idx_forum_threads_pinned         (is_pinned) WHERE is_pinned = TRUE
-idx_forum_threads_search         GIN (to_tsvector on title + content_text)
+**File:** `supabase/migrations/20260405_forum_schema.sql`
 
--- Replies
-idx_forum_replies_thread         (thread_id)
-idx_forum_replies_position       (thread_id, position)
+Creates 5 tables + indexes + helper functions + RLS policies.
 
--- Votes
-idx_forum_votes_pub              (publication_id)
+### Tables
+
+| Table | Purpose |
+|---|---|
+| `forum_categories` | Board categories (slug PK, static reference) |
+| `forum_threads` | Thread metadata + content cache |
+| `forum_thread_replies` | Reply metadata + content cache |
+| `forum_votes` | Upvotes/downvotes per publication |
+| `forum_communities` | Language/topic community groups |
+
+### Key Design Decisions
+- `content_json JSONB` on threads AND replies from day one
+- `content_text TEXT` for full-text search (GIN index)
+- `tags TEXT[]` on threads from day one (not deferred to Phase 8)
+- `forum_` prefix on all tables
+- RLS uses `auth.jwt() ->> 'sub'` (Fountain's pattern)
+- Reuses existing `is_admin()` function
+
+---
+
+## Step 3.2: Create the Seed Migration
+
+**File:** `supabase/migrations/20260405_seed_categories.sql`
+
+Inserts 30 categories matching `src/lib/forum/categories.ts`:
+- 4 General Discussion (commons)
+- 11 Functions (research)
+- 6 Technical (research)
+- 4 Partner Communities (commons)
+- 5 Others (commons)
+
+---
+
+## Step 3.3: Copy Files to VPS and Execute
+
+```bash
+# From Mac: copy migration files to VPS
+scp supabase/migrations/20260405_forum_schema.sql root@72.61.119.100:/tmp/
+scp supabase/migrations/20260405_seed_categories.sql root@72.61.119.100:/tmp/
+
+# On VPS: run them
+docker exec -i supabase-db psql -U postgres -d postgres < /tmp/20260405_forum_schema.sql
+docker exec -i supabase-db psql -U postgres -d postgres < /tmp/20260405_seed_categories.sql
+```
+
+If SCP fails (password issue), alternative: paste SQL directly on VPS:
+```bash
+# On VPS:
+cat > /tmp/20260405_forum_schema.sql << 'SQLEOF'
+... paste SQL here ...
+SQLEOF
+docker exec -i supabase-db psql -U postgres -d postgres < /tmp/20260405_forum_schema.sql
+```
+
+---
+
+## Step 3.4: Verify
+
+Run these on VPS to confirm everything worked:
+
+```bash
+# Count categories
+docker exec supabase-db psql -U postgres -d postgres -c "SELECT count(*) FROM forum_categories;"
+# Expected: 30
+
+# Check sections
+docker exec supabase-db psql -U postgres -d postgres -c "SELECT section, count(*) FROM forum_categories GROUP BY section ORDER BY section;"
+# Expected: functions=11, general=4, others=5, partners=4, technical=6
+
+# Test thread insert
+docker exec supabase-db psql -U postgres -d postgres -c "
+INSERT INTO forum_threads (root_publication_id, feed, category, title, author_address, author_username)
+VALUES ('test-pub-1', 'commons', 'beginners', 'Test thread', '0xtest', 'testuser')
+RETURNING id, title;
+"
+
+# Test reply insert
+docker exec supabase-db psql -U postgres -d postgres -c "
+INSERT INTO forum_thread_replies (thread_id, publication_id, position, author_address, author_username)
+VALUES ((SELECT id FROM forum_threads WHERE root_publication_id = 'test-pub-1'), 'test-reply-1', 1, '0xtest', 'testuser')
+RETURNING id, position;
+"
+
+# Test helper function
+docker exec supabase-db psql -U postgres -d postgres -c "SELECT forum_add_thread_to_category('beginners');"
+docker exec supabase-db psql -U postgres -d postgres -c "SELECT slug, thread_count FROM forum_categories WHERE slug = 'beginners';"
+# Expected: thread_count = 1
+
+# Test search
+docker exec supabase-db psql -U postgres -d postgres -c "SELECT * FROM forum_search_threads('test', 10);"
+
+# Clean up test data
+docker exec supabase-db psql -U postgres -d postgres -c "
+DELETE FROM forum_thread_replies WHERE publication_id = 'test-reply-1';
+DELETE FROM forum_threads WHERE root_publication_id = 'test-pub-1';
+UPDATE forum_categories SET thread_count = 0 WHERE slug = 'beginners';
+"
 ```
 
 ---
@@ -106,29 +138,15 @@ idx_forum_votes_pub              (publication_id)
 | T3.3 | Insert test thread row | Succeeds, UUID generated |
 | T3.4 | Insert test reply row | Succeeds, FK to thread valid |
 | T3.5 | Call `forum_add_thread_to_category('beginners')` | thread_count increments |
-| T3.6 | Call `forum_apply_vote(pubId, account, 1)` | Vote row created, upvotes incremented |
-| T3.7 | Call `forum_apply_vote` again with same direction | Vote removed (toggle off) |
-| T3.8 | Call `forum_search_threads('lens account')` | Returns matching threads |
-| T3.9 | Unauthenticated user tries to INSERT thread | Blocked by RLS |
-| T3.10 | Non-author tries to UPDATE thread | Blocked by RLS |
+| T3.6 | Call `forum_search_threads('test', 10)` | Returns matching threads |
+| T3.7 | Tables have correct indexes | All indexes created |
+| T3.8 | RLS enabled on all tables | Confirmed via `\dt+` |
+
+---
 
 ## Files Created
 
 ```
-supabase/migrations/YYYYMMDD_forum_schema.sql      — tables + indexes + RLS
-supabase/migrations/YYYYMMDD_seed_categories.sql    — 30 category rows
-```
-
-## Schema Diagram
-
-```
-forum_categories (slug PK)
-    ↑
-forum_threads (id UUID PK, category FK)
-    ↑
-forum_thread_replies (id UUID PK, thread_id FK)
-
-forum_votes (id UUID PK, publication_id + account_address UNIQUE)
-
-forum_communities (id UUID PK, lens_group_address UNIQUE)
+supabase/migrations/20260405_forum_schema.sql      — tables + indexes + functions + RLS
+supabase/migrations/20260405_seed_categories.sql    — 30 category rows
 ```

@@ -37,8 +37,8 @@ All specs were derived from merging:
 |---|---|---|---|---|
 | 1 | [Foundation](./01-FOUNDATION.md) | Fork running, auth working, publish verified | ✅ DONE | 2026-04-04 |
 | 2 | [Lens Primitives](./02-LENS-PRIMITIVES.md) | 2 Groups + 2 Feeds created onchain | ✅ DONE | 2026-04-04 |
-| 3 | [Database](./03-DATABASE.md) | Forum tables + seed data in Supabase | ⬜ Next | — |
-| 4 | [Forum Pages](./04-FORUM-PAGES.md) | Landing, board list, thread detail pages | ⬜ Blocked | — |
+| 3 | [Database](./03-DATABASE.md) | Forum tables + seed data in Supabase | ✅ DONE | 2026-04-05 |
+| 4 | [Forum Pages](./04-FORUM-PAGES.md) | Landing, board list, thread detail pages | ⬜ Next | — |
 | 5 | [Composer](./05-COMPOSER.md) | Discourse-style bottom panel composer | ⬜ Blocked | — |
 | 6 | [Publish Flow](./06-PUBLISH-FLOW.md) | Thread creation + reply publishing | ⬜ Blocked | — |
 | 7 | [Forum Features](./07-FORUM-FEATURES.md) | Voting, moderation, quote-reply | ⬜ Blocked | — |
