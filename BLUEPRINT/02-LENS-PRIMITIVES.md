@@ -72,15 +72,35 @@ Approve yourself (and co-founders) as members of both groups:
 
 ## Acceptance Tests
 
-| # | Test | Expected Result |
-|---|---|---|
-| T2.1 | `fetchGroup(COMMONS_GROUP_ADDRESS)` | Returns group with name "Society-Commons" |
-| T2.2 | `fetchGroup(RESEARCH_GROUP_ADDRESS)` | Returns group with name "Society-Research" |
-| T2.3 | `fetchFeed(COMMONS_FEED_ADDRESS)` | Returns feed with groupGatedRule |
-| T2.4 | `fetchFeed(RESEARCH_FEED_ADDRESS)` | Returns feed with groupGatedRule |
-| T2.5 | Post to Commons Feed WITHOUT membership | Rejected by GroupGatedFeedRule |
-| T2.6 | Post to Commons Feed AFTER approval | Succeeds |
-| T2.7 | Import constants in app, no TS errors | Compiles clean |
+| # | Test | Expected Result | Status |
+|---|---|---|---|
+| T2.1 | `fetchGroup(COMMONS_GROUP_ADDRESS)` | Returns group with name "Society-Commons-Open" | ✅ |
+| T2.2 | `fetchGroup(RESEARCH_GROUP_ADDRESS)` | Returns group with name "Society-Research-Open" | ✅ |
+| T2.3 | `fetchFeed(COMMONS_FEED_ADDRESS)` | Returns feed with groupGatedRule | ✅ |
+| T2.4 | `fetchFeed(RESEARCH_FEED_ADDRESS)` | Returns feed with groupGatedRule | ✅ |
+| T2.5 | Post to Commons Feed WITHOUT membership | Rejected by GroupGatedFeedRule | Deferred |
+| T2.6 | Post to Commons Feed AFTER joining | Succeeds | Deferred to Phase 6 |
+| T2.7 | Import constants in app, no TS errors | Compiles clean | ✅ |
+
+## Completion Notes (2026-04-04)
+
+### Decision: Open Groups (no MembershipApprovalGroupRule)
+
+First attempt used `membershipApprovalRule` which blocked join requests
+via scripts. Recreated groups without the rule — open membership, anyone
+can join. Membership approval can be added later via group rule updates.
+
+### Addresses (v2 — open groups)
+- Commons Group: `0xC49d554071dC12498Df4bDCD39E337062c782644`
+- Research Group: `0x7f2b18933152DF1c6ded211583c95A739831743d`
+- Commons Feed: `0x3e7EEfaC1cF8Aaf260d045694B2312139f46fd03`
+- Research Feed: `0xb3E74A66c813b79c63Db6A5f13D57ffBDa62D590`
+
+### Old addresses (v1 — approval-gated, unused)
+- Commons Group: `0x724CCb155b813b8a21E7C452167d22828871c7E1`
+- Research Group: `0x73D8A1c03C3e5a7686295574f4Fce2F08ea908B8`
+- Commons Feed: `0x43cF2ECc67D02d6F262Ed789de98f1950AAF8a2C`
+- Research Feed: `0x0eC9c71e865a8690D5285B278320a251331d6321`
 
 ## Files Created
 

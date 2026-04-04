@@ -33,18 +33,18 @@ All specs were derived from merging:
 
 ## Phase Overview
 
-| # | Phase | Deliverable | Depends On |
-|---|---|---|---|
-| 1 | [Foundation](./01-FOUNDATION.md) | Fork running, auth working, publish verified | — |
-| 2 | [Lens Primitives](./02-LENS-PRIMITIVES.md) | 2 Groups + 2 Feeds created onchain | Phase 1 |
-| 3 | [Database](./03-DATABASE.md) | Forum tables + seed data in Supabase | Phase 1 |
-| 4 | [Forum Pages](./04-FORUM-PAGES.md) | Landing, board list, thread detail pages | Phase 3 |
-| 5 | [Composer](./05-COMPOSER.md) | Discourse-style bottom panel composer | Phase 4 |
-| 6 | [Publish Flow](./06-PUBLISH-FLOW.md) | Thread creation + reply publishing | Phases 2, 4, 5 |
-| 7 | [Forum Features](./07-FORUM-FEATURES.md) | Voting, moderation, quote-reply | Phase 6 |
-| 8 | [Research Section](./08-RESEARCH.md) | Token-gated research with categories + tags | Phase 7 |
-| 9 | [Recovery & Sync](./09-RECOVERY-SYNC.md) | Background sync + full recovery script | Phase 6 |
-| 10 | [Polish & Deploy](./10-POLISH-DEPLOY.md) | SEO, caching, error handling, production | All |
+| # | Phase | Deliverable | Status | Completed |
+|---|---|---|---|---|
+| 1 | [Foundation](./01-FOUNDATION.md) | Fork running, auth working, publish verified | ✅ DONE | 2026-04-04 |
+| 2 | [Lens Primitives](./02-LENS-PRIMITIVES.md) | 2 Groups + 2 Feeds created onchain | ✅ DONE | 2026-04-04 |
+| 3 | [Database](./03-DATABASE.md) | Forum tables + seed data in Supabase | ⬜ Next | — |
+| 4 | [Forum Pages](./04-FORUM-PAGES.md) | Landing, board list, thread detail pages | ⬜ Blocked | — |
+| 5 | [Composer](./05-COMPOSER.md) | Discourse-style bottom panel composer | ⬜ Blocked | — |
+| 6 | [Publish Flow](./06-PUBLISH-FLOW.md) | Thread creation + reply publishing | ⬜ Blocked | — |
+| 7 | [Forum Features](./07-FORUM-FEATURES.md) | Voting, moderation, quote-reply | ⬜ Blocked | — |
+| 8 | [Research Section](./08-RESEARCH.md) | Token-gated research with categories + tags | ⬜ Blocked | — |
+| 9 | [Recovery & Sync](./09-RECOVERY-SYNC.md) | Background sync + full recovery script | ⬜ Blocked | — |
+| 10 | [Polish & Deploy](./10-POLISH-DEPLOY.md) | SEO, caching, error handling, production | ⬜ Blocked | — |
 
 ## Dependency Graph
 

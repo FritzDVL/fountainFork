@@ -82,14 +82,15 @@ from the initial migration (Phase 3). Both publish services (Phase 6) write
 to these columns at publish time. Thread detail pages read from Supabase
 first, Lens API only as fallback.
 
-## Rule 7: RLS — Not USING (true)
+## Rule 7: RLS — Use auth.jwt()
 
-Tightened policies:
-- Threads/replies: public read, authenticated insert, author-or-admin update
-- Votes: public read, own-votes-only for write
-- Categories/communities: public read, admin-only write
+Fountain's JWT pattern (confirmed from migrations):
+- User address: `auth.jwt() ->> 'sub'`
+- Admin check: reuse existing `is_admin()` function
+- Metadata access: `auth.jwt() -> 'metadata' ->> 'address'`
 
-Verify JWT claim path: `(current_setting('request.jwt.claims')::json->>'metadata')::json->>'address'`
+Do NOT use `current_setting('request.jwt.claims')` — that's a different
+pattern. Fountain uses Supabase's `auth.jwt()` helper.
 
 ## Rule 8: Middleware — CORS Only
 
@@ -109,6 +110,34 @@ Only change: add forum domain to `allowedOrigins`.
 Fountain uses `"canary"` version for both `@lens-protocol/client` and
 `@lens-protocol/react`. API surfaces may differ from stable docs.
 Test all Lens SDK calls against the actual installed version.
+
+Known differences found:
+- `approveGroupMembershipRequests` uses `accounts` not `members`
+- Private keys MUST have `0x` prefix with no spaces
+
+## Rule 11: Migrations via Docker Exec
+
+`supabase db push` fails from Mac (TLS error with self-hosted PostgreSQL).
+Run all migrations on the VPS:
+
+```bash
+docker exec -i supabase-db psql -U postgres -d postgres < migration.sql
+```
+
+## Rule 12: Groups Are Open (No Approval)
+
+Groups were created WITHOUT `MembershipApprovalGroupRule`.
+`joinGroup()` is instant — no approval step needed.
+Membership approval can be added later by updating group rules.
+
+## Rule 13: VPS Deployment (Not Vercel)
+
+Everything runs on one VPS (72.61.119.100):
+- App: PM2 + Bun on port 3000
+- Auth server: PM2 + Bun on port 3004
+- Supabase: Docker on ports 5432/8000
+- Nginx: reverse proxy + HTTPS
+- Cron: system crontab (not Vercel cron)
 
 ---
 
