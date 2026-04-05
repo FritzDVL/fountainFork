@@ -1,60 +1,49 @@
-# Fountain Editor — Centering & Layout Notes
+# Editor Centering — SOLVED
 
-## The Problem
+## The Problem (from Phase 4)
 
-Fountain's `PlateEditor` component has hardcoded centering:
+Forum post content was centered with extra padding instead of being
+left-aligned under the author name.
+
+## Root Cause
+
+Two layers of centering in Fountain's editor:
+
+1. **Outer wrapper** in `editor.tsx` line 93:
+   `<div className="max-w-[65ch] w-full mx-auto">`
+
+2. **Editor variant padding** in `ui/editor.tsx`:
+   `fullWidth: "min-h-full px-6 sm:px-16 text-base md:px-24"`
+
+The `fullWidth` variant adds `px-6` (24px), `sm:px-16` (64px), and
+`md:px-24` (96px) of horizontal padding. This is designed for article
+reading but wrong for forum posts.
+
+## The Fix
+
+Created `ForumEditor` component (`src/components/forum/forum-editor.tsx`)
+that uses the same Plate.js setup but overrides the padding:
+
 ```tsx
-// src/components/editor/editor.tsx line 93
-<div className="max-w-[65ch] w-full mx-auto">
-  <Editor variant={"fullWidth"} autoFocus />
-</div>
+<Editor variant="fullWidth" className="!px-0 !sm:px-0 !md:px-0" />
 ```
 
-This centers content in a narrow 65-character column — perfect for
-article reading but wrong for forum posts where content should be
-left-aligned and full-width within the post card.
+The `!` prefix in Tailwind means `!important`, which overrides the
+variant's built-in padding.
 
-## What We Tried
+The `ForumEditor` also skips:
+- The `max-w-[65ch] mx-auto` wrapper (not in our component tree)
+- Collaborative editing (YJS)
+- AutoSave
+- TocSidebar
 
-1. **CSS class override** `[&_.max-w-\\[65ch\\]]:max-w-none` — didn't work,
-   Tailwind bracket escaping doesn't match in selectors.
+## Where ForumEditor is Used
 
-2. **useEffect DOM manipulation** — queried `[class*="mx-auto"]` elements
-   and set inline styles. Partially works but timing-dependent and fragile.
+- `forum-post-content.tsx` — renders thread/reply content (readOnly)
+- `composer-panel.tsx` — the composer editor (edit mode)
 
-## The Real Fix (Phase 5 or later)
+## Key Lesson
 
-The proper solution is one of:
-
-**Option A: Create a `ForumEditor` wrapper component**
-Fork the readOnly rendering path from `editor.tsx` into a new component
-that removes the `max-w-[65ch] mx-auto` wrapper. This is the cleanest
-approach but requires understanding the full editor component tree.
-
-**Option B: Use the static editor (`static.tsx`)**
-Fountain has `getStaticEditor()` in `src/components/editor/static.tsx`
-which creates a Slate editor without the centering wrapper. This renders
-server-side and doesn't have the layout constraints. However, it needs
-a different rendering approach (not the `<Editor>` component).
-
-**Option C: CSS global override**
-Add a global CSS rule in `globals.css`:
-```css
-.forum-post-content .max-w-\[65ch\] {
-  max-width: none;
-  margin-left: 0;
-}
-```
-This requires testing the exact CSS selector escaping.
-
-## Where This Gets Fixed
-
-- **Phase 5 (Composer)** — when we build the composer, we'll need to
-  deeply understand the editor component anyway. That's the right time
-  to create a `ForumEditor` variant.
-- **Phase 10 (Polish)** — if not fixed in Phase 5, this is a polish item.
-
-## Current State
-
-Content renders correctly (text, headings, formatting all work).
-It's just centered instead of left-aligned. Functional, not broken.
+When reusing a component library's variants, check the CSS they apply.
+The variant name `fullWidth` sounds right but it still had article-width
+padding. Always inspect the actual CSS values.

@@ -39,16 +39,22 @@ NOT the server client (no cookies in scripts).
 For each feed (commons, research):
   1. fetchPosts(client, { filter: { feeds: [{ feed: ADDRESS }] } })
      → paginate through ALL posts
-  2. For each post where commentOn is null:
+  2. For each post with `forumCategory` attribute:
      → Thread root
-     → Read forumCategory from metadata attributes (default: "off-topic")
+     → Read forumCategory value (default: "off-topic")
      → UPSERT into forum_threads
-  3. For each thread root:
-     → fetchPostReferences(rootId, [CommentOn])
-     → Order by timestamp
-     → UPSERT into forum_thread_replies with position = index + 1
+  3. For each post with `forumThreadId` attribute:
+     → Reply — value is the root publication ID
+     → Find/create parent thread
+     → UPSERT into forum_thread_replies
+     → Order by timestamp to assign positions
   4. Recount category thread_counts
 ```
+
+NOTE: Recovery does NOT use `commentOn` or `fetchPostReferences`.
+Thread structure is reconstructed from metadata attributes only:
+- `forumCategory` → this is a thread root
+- `forumThreadId` → this is a reply (value = root's publication ID)
 
 **Content cache rebuild:**
 - Read `contentJson` attribute from each publication's metadata
@@ -70,10 +76,10 @@ Run when: every 5 minutes via cron.
 ```
 For each feed:
   1. Fetch recent posts (last 100)
-  2. For each root post (no commentOn):
+  2. For each post with `forumCategory` attribute:
      → Check if exists in forum_threads
-     → If missing: insert (catches posts from other Lens apps)
-  3. For each reply (has commentOn):
+     → If missing: insert as thread root
+  3. For each post with `forumThreadId` attribute:
      → Check if exists in forum_thread_replies
      → If missing: find parent thread, calculate position, insert
   4. Check for deleted posts (post.isDeleted):

@@ -346,10 +346,8 @@ Note: `thread-row.tsx` merged into `thread-list-view.tsx` to reduce files.
   not linked to actual Lens Groups yet.
 
 ### Known Issues
-- **Editor centering:** Fountain's PlateEditor wraps content in
-  `max-w-[65ch] mx-auto` which centers forum post content. CSS overrides
-  attempted but didn't fully work. Fix planned for Phase 5 (Composer)
-  when we create a ForumEditor variant. See `LEARNING/07-EDITOR-CENTERING-ISSUE.md`.
+- **Editor centering:** ~~RESOLVED in Phase 5~~ — ForumEditor component
+  overrides `fullWidth` variant padding with `!px-0`. See `LEARNING/07-EDITOR-CENTERING-ISSUE.md`.
 
 ### Implementation Log
 - `categories.ts` was restructured: split into `LANDING_SECTIONS` (4 sections

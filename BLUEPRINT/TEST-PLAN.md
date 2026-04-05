@@ -148,7 +148,7 @@ test("publishThread posts to correct feed based on category")
 test("publishThread returns publicationId on success")
 test("publishThread returns error for invalid category")
 
-test("publishReply includes commentOn pointing to root")
+test("publishReply publishes as standalone article (NO commentOn)")
 test("publishReply includes forumThreadId attribute")
 test("publishReply posts to same feed as root")
 ```

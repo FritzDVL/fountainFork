@@ -4,6 +4,8 @@ import { Pin, Lock } from "lucide-react";
 import { getThreadDetail } from "@/lib/forum/get-thread-detail";
 import { getCategoryBySlug } from "@/lib/forum/categories";
 import { ForumPostCard } from "@/components/forum/forum-post-card";
+import { ReplyButton } from "@/components/forum/reply-button";
+import type { FeedType } from "@/lib/forum/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +56,7 @@ export default async function ThreadPage({ params }: Props) {
         downvotes={thread.downvotes}
         position={0}
         isRoot
+        replyButton={<ReplyButton rootPublicationId={thread.rootPublicationId} feed={thread.feed as FeedType} threadTitle={thread.title} />}
       />
 
       {/* Replies */}
@@ -67,15 +70,11 @@ export default async function ThreadPage({ params }: Props) {
           upvotes={reply.upvotes}
           downvotes={reply.downvotes}
           position={reply.position}
+          replyButton={<ReplyButton rootPublicationId={thread.rootPublicationId} feed={thread.feed as FeedType} threadTitle={thread.title} />}
         />
       ))}
 
-      {/* Reply editor placeholder */}
-      {!thread.isLocked && (
-        <div className="border rounded-lg p-6 mt-6 text-center text-sm text-muted-foreground">
-          Reply editor will be here (Phase 5 — Composer)
-        </div>
-      )}
+      {/* Reply via composer — click Reply on any post */}
     </div>
   );
 }

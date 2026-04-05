@@ -11,6 +11,7 @@ interface ForumPostCardProps {
   downvotes: number;
   position: number;
   isRoot?: boolean;
+  replyButton?: React.ReactNode;
 }
 
 export function ForumPostCard({
@@ -21,6 +22,7 @@ export function ForumPostCard({
   upvotes,
   position,
   isRoot = false,
+  replyButton,
 }: ForumPostCardProps) {
   return (
     <div className="border-b py-6 first:pt-0 last:border-b-0">
@@ -47,11 +49,12 @@ export function ForumPostCard({
       <ForumPostContent contentJson={contentJson} />
 
       {/* Heart reaction (static for now — wired in Phase 7) */}
-      <div className="flex items-center gap-1.5 mt-4 text-sm text-muted-foreground">
+      <div className="flex items-center gap-3 mt-4 text-sm text-muted-foreground">
         <button className="hover:text-red-500 transition-colors" type="button">
           <Heart className="h-4 w-4" />
         </button>
         {upvotes > 0 && <span className="text-xs">{upvotes}</span>}
+        {replyButton}
       </div>
     </div>
   );

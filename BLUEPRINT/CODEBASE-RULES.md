@@ -139,6 +139,20 @@ Everything runs on one VPS (72.61.119.100):
 - Nginx: reverse proxy + HTTPS
 - Cron: system crontab (not Vercel cron)
 
+## Rule 14: NO commentOn — Thread Structure is Supabase Only
+
+From CoreConceptV5.md:
+> NOT used: `commentOn`, Lens native comments, per-user blogs/feeds.
+
+Every reply is a standalone Lens publication. On Lens, replies look
+identical to thread roots. Thread structure (which reply belongs to
+which thread) exists ONLY in Supabase (`forum_thread_replies.thread_id`).
+
+Recovery uses `forumThreadId` metadata attribute, NOT `commentOn`.
+
+This was incorrectly carried over from MasterPlanV2.md into the
+original BLUEPRINT files. CoreConceptV5.md is the source of truth.
+
 ---
 
 ## Fountain Tables — Do Not Touch

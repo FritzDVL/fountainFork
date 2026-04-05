@@ -268,3 +268,38 @@ User types in composer
 
 The markdown conversion uses Fountain's existing serializer
 (checked in Phase 6 when we wire publishing).
+
+---
+
+## Completion Notes (2026-04-05)
+
+### All MVP Tests
+
+| # | Test | Status |
+|---|---|---|
+| T5.1 | Click "New Thread" → composer slides up | ✅ |
+| T5.2 | Board known from context (no dropdown) | ✅ (changed from original plan) |
+| T5.3 | Type title | ✅ |
+| T5.4 | Type in editor with rich text | ✅ |
+| T5.5 | Click Close | ✅ |
+| T5.6 | Click "Reply" on a post | ✅ |
+| T5.7 | Reply mode shows "Replying to: [title]" | ✅ |
+| T5.8 | Submit button visible | ✅ (logs to console, wired in Phase 6) |
+| T5.9 | Forum content left-aligned | ✅ FIXED — `!px-0` override |
+| T5.10 | Page padding when composer open | ✅ |
+
+### Design Changes from Original Plan
+- **Removed category dropdown** from composer header. Board is known from
+  context when user clicks "New Thread" on a specific board page.
+  Research category/tag selection will be added in Phase 8.
+- **Merged provider into hook file** — `ComposerContextProvider` lives in
+  `use-composer.tsx`, no separate `composer-provider.tsx` file needed.
+- **Added separate button components** — `new-thread-button.tsx` and
+  `reply-button.tsx` are client components that use the composer hook,
+  keeping the page components as server components.
+
+### Implementation Log
+- `.ts` → `.tsx` rename needed for hook file with JSX
+- Editor centering fixed: `Editor variant="fullWidth"` has `px-6 sm:px-16 md:px-24`,
+  overridden with `className="!px-0"` in ForumEditor
+- ForumEditor created as stripped-down Plate.js (no YJS, no AutoSave, no ToC)

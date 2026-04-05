@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getThreadsByCategory } from "@/lib/forum/get-threads";
 import { getCategoryBySlug } from "@/lib/forum/categories";
+import { NewThreadButton } from "@/components/forum/new-thread-button";
 import { ThreadListView } from "@/components/forum/thread-list-view";
 
 export const dynamic = "force-dynamic";
@@ -36,9 +37,7 @@ export default async function ThreadListPage({ params, searchParams }: Props) {
           <h1 className="text-xl font-bold">{cat.name}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{cat.description}</p>
         </div>
-        <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium shrink-0">
-          + New Thread
-        </button>
+        <NewThreadButton category={category} />
       </div>
 
       <ThreadListView threads={threads} total={total} page={page} />
