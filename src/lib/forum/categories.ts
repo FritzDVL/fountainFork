@@ -17,10 +17,14 @@ export interface Section {
   categories: Category[];
 }
 
-export const SECTIONS: Section[] = [
+// ============================================
+// COMMONS BOARDS — shown on /boards landing page
+// ============================================
+
+export const LANDING_SECTIONS: Section[] = [
   {
     id: "general",
-    title: "GENERAL DISCUSSION",
+    title: "General Discussion",
     feed: "commons",
     layout: "list",
     categories: [
@@ -32,7 +36,7 @@ export const SECTIONS: Section[] = [
   },
   {
     id: "functions",
-    title: "FUNCTIONS (VALUE SYSTEM)",
+    title: "Functions (Value System)",
     feed: "research",
     layout: "grid",
     categories: [
@@ -50,8 +54,41 @@ export const SECTIONS: Section[] = [
     ],
   },
   {
+    id: "others",
+    title: "Others",
+    feed: "commons",
+    layout: "list",
+    categories: [
+      { slug: "meta", name: "Meta-discussion", description: "About the forum itself.", section: "others", feed: "commons", displayOrder: 26 },
+      { slug: "politics", name: "Politics & Society", description: "Political impacts on society.", section: "others", feed: "commons", displayOrder: 27 },
+      { slug: "economics", name: "Economics", description: "Economic models and theories.", section: "others", feed: "commons", displayOrder: 28 },
+      { slug: "crypto-web3", name: "Cryptocurrencies & Web3", description: "The broader crypto landscape.", section: "others", feed: "commons", displayOrder: 29 },
+      { slug: "off-topic", name: "Off-topic", description: "Anything unrelated to the protocol.", section: "others", feed: "commons", displayOrder: 30 },
+    ],
+  },
+  {
+    id: "partners",
+    title: "Partner Communities",
+    feed: "commons",
+    layout: "list",
+    categories: [
+      { slug: "partners-general", name: "General Discussion", description: "Partner community discussions.", section: "partners", feed: "commons", displayOrder: 5 },
+      { slug: "announcements", name: "Announcements", description: "Official partner news and updates.", section: "partners", feed: "commons", displayOrder: 6 },
+      { slug: "network-states", name: "Network States", description: "Current and upcoming network states.", section: "partners", feed: "commons", displayOrder: 7 },
+      { slug: "partner-badges", name: "Partner Badges & SPEC", description: "Badge systems for partners.", section: "partners", feed: "commons", displayOrder: 8 },
+    ],
+  },
+];
+
+// ============================================
+// RESEARCH CATEGORIES — shown on /research page (Phase 8)
+// These are the "Technical Section" categories
+// ============================================
+
+export const RESEARCH_SECTIONS: Section[] = [
+  {
     id: "technical",
-    title: "SOCIETY PROTOCOL TECHNICAL SECTION",
+    title: "Society Protocol Technical Section",
     feed: "research",
     layout: "list",
     categories: [
@@ -63,34 +100,32 @@ export const SECTIONS: Section[] = [
       { slug: "security", name: "Security", description: "Security protocols.", section: "technical", feed: "research", displayOrder: 25 },
     ],
   },
-  {
-    id: "partners",
-    title: "PARTNER COMMUNITIES",
-    feed: "commons",
-    layout: "list",
-    categories: [
-      { slug: "partners-general", name: "General Discussion", description: "Partner community discussions.", section: "partners", feed: "commons", displayOrder: 5 },
-      { slug: "announcements", name: "Announcements", description: "Official partner news and updates.", section: "partners", feed: "commons", displayOrder: 6 },
-      { slug: "network-states", name: "Network States", description: "Current and upcoming network states.", section: "partners", feed: "commons", displayOrder: 7 },
-      { slug: "partner-badges", name: "Partner Badges & SPEC", description: "Badge systems for partners.", section: "partners", feed: "commons", displayOrder: 8 },
-    ],
-  },
-  {
-    id: "others",
-    title: "OTHERS",
-    feed: "commons",
-    layout: "list",
-    categories: [
-      { slug: "meta", name: "Meta-discussion", description: "About the forum itself.", section: "others", feed: "commons", displayOrder: 26 },
-      { slug: "politics", name: "Politics & Society", description: "Political impacts on society.", section: "others", feed: "commons", displayOrder: 27 },
-      { slug: "economics", name: "Economics", description: "Economic models and theories.", section: "others", feed: "commons", displayOrder: 28 },
-      { slug: "crypto-web3", name: "Cryptocurrencies & Web3", description: "The broader crypto landscape.", section: "others", feed: "commons", displayOrder: 29 },
-      { slug: "off-topic", name: "Off-topic", description: "Anything unrelated to the protocol.", section: "others", feed: "commons", displayOrder: 30 },
-    ],
-  },
 ];
 
+// ============================================
+// ALL SECTIONS combined (for lookups)
+// ============================================
+
+export const SECTIONS: Section[] = [...LANDING_SECTIONS, ...RESEARCH_SECTIONS];
 export const ALL_CATEGORIES = SECTIONS.flatMap((s) => s.categories);
 export const getCategoryBySlug = (slug: string) => ALL_CATEGORIES.find((c) => c.slug === slug);
 export const getCategoriesByFeed = (feed: FeedType) => ALL_CATEGORIES.filter((c) => c.feed === feed);
 export const getCategoriesBySection = (sectionId: string) => SECTIONS.find((s) => s.id === sectionId)?.categories ?? [];
+
+// ============================================
+// LANGUAGE BOARDS — static data for landing page
+// These will later come from forum_communities table
+// ============================================
+
+export interface LanguageBoard {
+  flag: string;
+  name: string;
+  members: number;
+  description: string;
+}
+
+export const LANGUAGE_BOARDS: LanguageBoard[] = [
+  { flag: "🇪🇸", name: "Español", members: 42, description: "Comunidad hispanohablante del protocolo." },
+  { flag: "🇧🇷", name: "Português", members: 18, description: "Comunidade lusófona do protocolo." },
+  { flag: "🇨🇳", name: "中文", members: 7, description: "中文社区讨论协议相关话题。" },
+];

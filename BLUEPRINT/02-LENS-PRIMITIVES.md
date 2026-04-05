@@ -58,9 +58,13 @@ Contains: `COMMONS_GROUP_ADDRESS`, `RESEARCH_GROUP_ADDRESS`,
 src/lib/forum/categories.ts
 ```
 
-30 categories across 5 sections. Each category maps to a feed type
-(commons or research). Includes flat lookup helpers:
-`ALL_CATEGORIES`, `getCategoryBySlug()`, `getCategoriesByFeed()`.
+30 categories across 5 sections (4 on landing page, 1 research-only).
+Each category maps to a feed type (commons or research). Includes flat
+lookup helpers: `ALL_CATEGORIES`, `getCategoryBySlug()`, `getCategoriesByFeed()`.
+
+Landing page uses `LANDING_SECTIONS` (4 sections).
+Research page uses `RESEARCH_SECTIONS` (1 section — Technical).
+`SECTIONS` combines both for lookups.
 
 ### 2.5 Approve Initial Members
 
@@ -107,5 +111,5 @@ can join. Membership approval can be added later via group rule updates.
 ```
 scripts/setup-lens-primitives.ts     — one-time creation script
 src/lib/forum/constants.ts           — 4 addresses + FEED_MAP
-src/lib/forum/categories.ts          — 30 categories, 5 sections
+src/lib/forum/categories.ts          — 30 categories (4 landing sections + 1 research section)
 ```

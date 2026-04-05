@@ -12,7 +12,7 @@ design tokens (Inter font, dark theme, same color variables).
 
 | Mockup File | Phase | What It Shows |
 |---|---|---|
-| `mockup-landing-fountain.html` | Phase 4 | Landing page with 5 board sections + language communities |
+| `mockup-landing-fountain.html` | Phase 4 | Landing page: 4 board sections + language communities (NO Technical Section) |
 | `mockup-board-fountain.html` | Phase 4 | Thread list for "Beginners & Help" category |
 | `mockup-research-fountain.html` | Phase 8 | Research section with filter toolbar + category badges |
 

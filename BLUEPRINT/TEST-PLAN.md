@@ -77,7 +77,7 @@ test("Empty category shows 'No threads yet' message")
 
 ### Data Layer Tests
 ```
-test("getBoardSections returns all 5 sections with categories")
+test("getBoardSections returns all 4 landing sections with categories")
 test("getThreadsByCategory filters by category slug")
 test("getThreadsByCategory sorts pinned first, then by last_reply_at")
 test("getThreadsByCategory paginates correctly")

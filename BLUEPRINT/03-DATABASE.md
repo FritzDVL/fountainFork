@@ -53,11 +53,11 @@ Creates 5 tables + indexes + helper functions + RLS policies.
 **File:** `supabase/migrations/20260405_seed_categories.sql`
 
 Inserts 30 categories matching `src/lib/forum/categories.ts`:
-- 4 General Discussion (commons)
-- 11 Functions (research)
-- 6 Technical (research)
-- 4 Partner Communities (commons)
-- 5 Others (commons)
+- 4 General Discussion (commons) — landing page
+- 11 Functions (research) — landing page (grid)
+- 5 Others (commons) — landing page
+- 4 Partner Communities (commons) — landing page
+- 6 Technical (research) — Research page ONLY (Phase 8), NOT on landing
 
 ---
 

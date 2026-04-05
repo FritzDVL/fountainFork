@@ -20,6 +20,11 @@ Phase 7 (forum features working)
 
 ## How Research Differs from Commons
 
+The Technical Section (Architecture, State Machine, Consensus, Cryptography,
+Account System, Security) lives HERE on the Research page — NOT on the
+landing page. It was moved from the landing page to Research because these
+are specialized topics that belong behind the 🔒 Research button.
+
 | Aspect | Commons (Boards) | Research |
 |---|---|---|
 | Navigation | Click board → see threads for that board | Single stream, filter by category/tag |

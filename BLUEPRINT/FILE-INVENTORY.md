@@ -21,7 +21,7 @@ scripts/register-auth-endpoint.ts                — one-time Lens registration
 ```
 scripts/setup-lens-primitives.ts                 — one-time group/feed creation
 src/lib/forum/constants.ts                       — 4 onchain addresses + FEED_MAP
-src/lib/forum/categories.ts                      — 30 categories, 5 sections, helpers
+src/lib/forum/categories.ts                      — 30 categories, LANDING_SECTIONS (4) + RESEARCH_SECTIONS (1)
 ```
 
 ## Phase 3: Database

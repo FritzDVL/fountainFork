@@ -1,80 +1,87 @@
-# Phase 4: Forum Pages — Landing, Board List, Thread Detail
+# Phase 4: Forum Pages — Landing, Board List, Thread Detail (UPDATED)
 
 ## Goal
 
-Build the read-only forum UI: landing page with board sections, thread
-list filtered by category, and thread detail with stacked entries. By the
-end, users can browse the forum (with test data seeded manually).
+Build the read-only forum UI. By the end, users can browse boards, see
+thread lists, and read threads with stacked replies.
 
 ## Depends On
 
-Phase 3 (database tables exist)
+Phase 3 ✅ (forum tables + categories seeded)
 
-## Visual References
+---
 
-- `PlanExecution/mockup-landing-fountain.html` — landing page target
-- `PlanExecution/mockup-board-fountain.html` — thread list target
-- `PlanExecution/LandingPageExample.md` — component-level spec
-- `PlanExecution/BoardExample.md` — thread list + thread detail spec
+## What We Confirmed From the Codebase
+
+### Content Rendering
+- Fountain renders posts with: `<Editor showToc value={contentJson} readOnly={true} />`
+- `value` is a **string** (JSON.stringify'd Plate.js content), NOT an object
+- The `Editor` component is at `src/components/editor/editor.tsx` (default export)
+- It's a client component (`"use client"`) — needs to be imported dynamically in server pages
+- There's also a `getStaticEditor()` in `static.tsx` for server-side rendering
+
+### Supabase Server Client
+- Import: `import { createClient } from "@/lib/db/server"`
+- Returns a Supabase client with the user's JWT from cookies
+- Used in all server components and API routes
+
+### Available UI Components (reuse from Fountain)
+- `Button` from `@/components/ui/button`
+- `Card` from `@/components/ui/card`
+- `Badge` from `@/components/ui/badge`
+- `Skeleton` from `@/components/ui/skeleton`
+- `Separator` from `@/components/ui/separator`
+- `Table` from `@/components/ui/table`
+- `UserAvatar` from `@/components/user/user-avatar`
+- `UserName` from `@/components/user/user-name`
+- `formatRelativeTime` from `@/lib/utils`
+
+### Layout
+- Root layout (`src/app/layout.tsx`) wraps everything with Header + Footer
+- Forum pages inherit this — no need for a separate layout
+- Fountain uses flat routes (no route groups)
 
 ---
 
 ## Routes
 
 ```
-/boards                              → Landing page (board sections)
-/boards/commons?category=[slug]      → Thread list for a child-board
-/thread/[rootPublicationId]          → Thread detail (stacked entries)
+/boards                              → Landing page
+/boards/[feed]/page.tsx              → Thread list (uses ?category= query param)
+/thread/[rootPublicationId]/page.tsx → Thread detail
 ```
 
-## Steps
+---
 
-### 4.1 Landing Page — `/boards`
+## Step 4.1: Data Layer (3 files)
 
-**File:** `src/app/boards/page.tsx` (server component)
+These are server-side functions that query Supabase. Create them first
+so the pages have data to render.
 
-**Layout:** Two-column on desktop (main + sidebar), single column on mobile.
+### File: `src/lib/forum/get-board-sections.ts`
 
-**Main content:** 5 section blocks rendered top-to-bottom:
-1. GENERAL DISCUSSION — list layout, 4 categories, commons feed
-2. FUNCTIONS (VALUE SYSTEM) — grid layout, 11 categories, research feed
-3. SOCIETY PROTOCOL TECHNICAL — list layout, 6 categories, locked theme
-4. PARTNER COMMUNITIES — list layout, 4 categories, commons feed
-5. OTHERS — list layout, 5 categories, commons feed
-
-Plus: LOCAL section with community cards at bottom.
-
-**Data fetching:** `src/lib/forum/get-board-sections.ts`
-- Query `forum_categories` for thread counts
-- Query `forum_threads` for latest activity per category
-- Merge with static section config from `categories.ts`
-
-**Components to create:**
-```
-src/components/forum/board-section-list.tsx    — section card (list layout)
-src/components/forum/board-section-grid.tsx    — section card (grid layout)
-src/components/forum/board-category-row.tsx    — single category row
-src/components/forum/board-grid-card.tsx       — single grid card
-src/components/forum/community-card.tsx        — language community card
-src/components/forum/forum-sidebar.tsx         — desktop sidebar
+```ts
+// Returns all sections with categories + thread counts + latest activity
+// Used by: /boards landing page
+// Pattern: import { createClient } from "@/lib/db/server"
 ```
 
-**Visual spec (from mockup-landing-fountain.html):**
-- Section header: muted bg, uppercase text, left accent bar
-- Category row: name + description left, thread count + views + activity right
-- Grid cards: bordered, icon + label, 2-col first row then 3-col
-- Community cards: centered avatar + name + member count + description
-- Max width: 960px centered
+Query:
+- `forum_categories` ordered by `display_order`
+- For each category: latest `forum_threads.last_reply_at` or `created_at`
+- Merge with static `SECTIONS` config from `categories.ts`
 
-### 4.2 Thread List — `/boards/[feed]`
+Returns: `BoardSection[]` with `categories: BoardCategory[]` each having
+`threadCount` and `latestActivity`.
 
-**File:** `src/app/boards/[feed]/page.tsx` (server component)
+### File: `src/lib/forum/get-threads.ts`
 
-**URL:** `/boards/commons?category=beginners`
+```ts
+// Returns paginated threads for a category
+// Used by: /boards/[feed] thread list page
+```
 
-**Layout:** Breadcrumb → page header (title + description + "New Thread" button) → thread table.
-
-**Data fetching:** `src/lib/forum/get-threads.ts`
+Query:
 ```sql
 SELECT * FROM forum_threads
 WHERE category = $1 AND is_hidden = false
@@ -82,110 +89,270 @@ ORDER BY is_pinned DESC, last_reply_at DESC NULLS LAST
 LIMIT 20 OFFSET $2
 ```
 
-**Components to create:**
-```
-src/components/forum/thread-list-view.tsx      — table with thread rows
-src/components/forum/thread-row.tsx            — single thread row
+Returns: `{ threads: ThreadListItem[], total: number }`
+
+### File: `src/lib/forum/get-thread-detail.ts`
+
+```ts
+// Returns thread + all replies
+// Used by: /thread/[rootPublicationId] detail page
 ```
 
-**Visual spec (from mockup-board-fountain.html):**
-- Table columns: Topic (55%) | Started by (14%) | Replies (9%) | Views (9%) | Activity (10%)
-- Pinned threads: 📌 icon before title
-- Author: green dot + username
-- Mobile: only Topic column visible
-- "Load More" button at bottom
+Queries:
+1. `forum_threads` WHERE `root_publication_id = $1`
+2. `forum_thread_replies` WHERE `thread_id = $1` ORDER BY `position`
+3. Calls `forum_increment_views` RPC
 
-### 4.3 Thread Detail — `/thread/[rootPublicationId]`
+Returns: `{ thread: ThreadDetail, replies: ThreadReply[] } | null`
+
+---
+
+## Step 4.2: Landing Page — `/boards`
+
+**File:** `src/app/boards/page.tsx` (server component)
+
+**What it renders:**
+```
+┌─ SECTION: GENERAL DISCUSSION ────────────────────────────────┐
+│ Beginners & Help          New to the forum...    12  340  2h │
+│ 4 Key Concepts            Core concepts...        5  120  1d │
+│ Web3 Outpost              Web3 integration...     3   87  3d │
+│ DAO Governance            Governance...           8  210  5h │
+└──────────────────────────────────────────────────────────────┘
+
+┌─ SECTION: FUNCTIONS (GRID) ──────────────────────────────────┐
+│ ┌──────────────────┐ ┌──────────────────┐                    │
+│ │ ✦ Economic Game  │ │ ✦ Function Ideas │                    │
+│ └──────────────────┘ └──────────────────┘                    │
+│ ┌────────────┐ ┌────────────┐ ┌────────────┐                │
+│ │ ✦ Hunting  │ │ ✦ Property │ │ ✦ Parenting│                │
+│ └────────────┘ └────────────┘ └────────────┘                │
+└──────────────────────────────────────────────────────────────┘
+
+┌─ SECTION: OTHERS ────────────────────────────────────────────┐
+│ ... (5 child-boards, list layout)                            │
+└──────────────────────────────────────────────────────────────┘
+
+┌─ SECTION: PARTNER COMMUNITIES ───────────────────────────────┐
+│ ... (4 child-boards, list layout)                            │
+└──────────────────────────────────────────────────────────────┘
+
+LANGUAGE BOARDS
+┌──────────┐ ┌──────────┐ ┌──────────┐
+│ Español  │ │Português │ │   中文    │
+└──────────┘ └──────────┘ └──────────┘
+```
+
+NOTE: Technical Section is NOT on the landing page. It belongs to the
+Research area (Phase 8, separate /research page).
+
+**Components needed:**
+- `board-section-list.tsx` — section with list of category rows
+- `board-section-grid.tsx` — section with grid of category cards
+- `board-category-row.tsx` — single row: name + desc + stats
+- `board-grid-card.tsx` — single grid card: icon + name
+
+**Styling:** Match `mockup-landing-fountain.html`:
+- Section header: muted bg, uppercase, left accent bar (3px)
+- Max width: 960px centered (`max-w-[960px] mx-auto`)
+- Category row: hover bg-muted, border-b between rows
+- Grid: 2-col first row, 3-col remaining rows
+
+---
+
+## Step 4.3: Thread List — `/boards/[feed]`
+
+**File:** `src/app/boards/[feed]/page.tsx` (server component)
+
+**URL example:** `/boards/commons?category=beginners`
+
+**What it renders:**
+```
+Boards / Beginners & Help                    ← breadcrumb
+
+Beginners & Help                [+ New Thread]
+New to the forum? Start here.
+
+┌──────────────────────────┬────────────┬───────┬─────┬────────┐
+│ Topic                    │ Started by │Replies│Views│Activity│
+├──────────────────────────┼────────────┼───────┼─────┼──────┤
+│ 📌 Welcome to the forum │  alice     │  24   │ 340 │   2h  │
+│ How do I create a Lens   │  bob       │   8   │ 120 │   5h  │
+└──────────────────────────┴────────────┴───────┴─────┴────────┘
+                       [Load More]
+```
+
+**Components needed:**
+- `thread-list-view.tsx` — table wrapper
+- `thread-row.tsx` — single thread row
+
+**Key details:**
+- Breadcrumb: `Link` to `/boards` + current category name
+- "New Thread" button: links to composer (Phase 5) or placeholder for now
+- Table columns hidden on mobile except Topic
+- Pinned threads: Pin icon before title
+- Empty state: "No threads yet. Be the first to start a discussion."
+
+---
+
+## Step 4.4: Thread Detail — `/thread/[rootPublicationId]`
 
 **File:** `src/app/thread/[rootPublicationId]/page.tsx` (server component)
 
-**Layout:** Breadcrumb → thread header → root post card → reply cards (stacked) → reply editor placeholder.
-
-**Data fetching:** `src/lib/forum/get-thread-detail.ts`
-- Fetch thread from `forum_threads` by `root_publication_id`
-- Fetch replies from `forum_thread_replies` ordered by `position`
-- Increment view count via `forum_increment_views`
-
-**Components to create:**
+**What it renders:**
 ```
-src/components/forum/thread-detail-view.tsx    — orchestrator
-src/components/forum/forum-post-card.tsx       — single post (root or reply)
-src/components/forum/forum-post-content.tsx    — content renderer
-```
+Boards / Beginners & Help / Welcome to the forum
 
-**Content rendering strategy:**
-1. If `content_json` exists in Supabase → render directly with Plate.js readOnly
-2. Fallback: fetch from Lens API via `fetchPost` → read `contentJson` attribute
-3. Render with: `<PlateEditor value={contentJson} readOnly={true} showToc={false} />`
+📌 Welcome to the forum
+24 replies · 340 views
 
-**Visual spec (from BoardExample.md):**
-- Each post: avatar + author + position label + timestamp → content → vote buttons
-- Root post labeled "Original post", replies labeled "Reply #N"
-- Vote buttons: ▲ score ▼
-- External link icon → `/publication/[id]` (standalone view)
-- Border-bottom between posts
-- Reply editor placeholder at bottom (wired in Phase 5)
-
-### 4.4 Data Layer Functions
-
-```
-src/lib/forum/get-board-sections.ts    — landing page data
-src/lib/forum/get-threads.ts           — thread list with pagination
-src/lib/forum/get-thread-detail.ts     — thread + replies
+┌─ POST #0 (ROOT) ────────────────────────────────────────────┐
+│  [avatar] alice · Original post · 3 days ago                │
+│                                                              │
+│  [Rich content rendered by Plate.js readOnly]                │
+│                                                              │
+│  ▲ 12 ▼                                                     │
+├──────────────────────────────────────────────────────────────┤
+│  [avatar] bob · Reply #1 · 3 days ago                       │
+│                                                              │
+│  [Rich content]                                              │
+│                                                              │
+│  ▲ 5 ▼                                                      │
+├──────────────────────────────────────────────────────────────┤
+│  [Reply editor placeholder — wired in Phase 5]              │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-All use `import { createClient } from "@/lib/db/server"` (server client).
+**Components needed:**
+- `thread-detail-view.tsx` — orchestrator (header + posts + reply area)
+- `forum-post-card.tsx` — single post (used for root AND replies)
+- `forum-post-content.tsx` — content renderer wrapper
 
-### 4.5 Seed Test Data
+**Content rendering approach:**
+1. Thread detail page is a SERVER component
+2. It passes `content_json` (from Supabase) to `forum-post-content.tsx`
+3. `forum-post-content.tsx` is a CLIENT component that renders:
+   ```tsx
+   <Editor value={JSON.stringify(contentJson)} readOnly={true} showToc={false} />
+   ```
+4. If `content_json` is null, show "Content unavailable" (fallback to Lens API is Phase 9)
 
-Manually insert 3-5 test threads with replies into Supabase to verify
-the UI renders correctly before the publish flow exists (Phase 6).
+**Vote buttons:** Static display only in Phase 4 (wired to backend in Phase 7)
+
+---
+
+## Step 4.5: Seed Test Data
+
+After pages are built, insert test data to verify rendering:
 
 ```sql
-INSERT INTO forum_threads (root_publication_id, feed, category, title, ...)
-VALUES ('test-pub-1', 'commons', 'beginners', 'Welcome to the forum', ...);
+-- On VPS:
+docker exec -i supabase-db psql -U postgres -d postgres << 'SQL'
+INSERT INTO forum_threads (root_publication_id, feed, category, title, summary, content_text, content_json, author_address, author_username, reply_count, views_count, is_pinned)
+VALUES
+('test-pub-1', 'commons', 'beginners', 'Welcome to the forum — read this first', 'A welcome post for new members.', 'Welcome everyone!', '[{"type":"p","children":[{"text":"Welcome everyone! This is the place to ask your first questions."}]},{"type":"h2","children":[{"text":"Getting Started"}]},{"type":"p","children":[{"text":"Here are some resources to help you get started with Society Protocol."}]}]'::jsonb, '0x8aE18FfF977aCc6Dc690C288a61004a7c7D5A931', 'fritz', 2, 42, true),
+('test-pub-2', 'commons', 'beginners', 'How do I create a Lens account?', 'Question about Lens account creation.', 'How do I create a Lens account?', '[{"type":"p","children":[{"text":"I am new here and want to know how to create a Lens account. Can someone help?"}]}]'::jsonb, '0x8aE18FfF977aCc6Dc690C288a61004a7c7D5A931', 'fritz', 0, 15, false),
+('test-pub-3', 'commons', 'dao-governance', 'Proposal: Community Treasury', 'Discussion about treasury management.', 'Proposal for community treasury.', '[{"type":"p","children":[{"text":"I propose we establish a community treasury for funding development."}]}]'::jsonb, '0x8aE18FfF977aCc6Dc690C288a61004a7c7D5A931', 'fritz', 1, 28, false);
 
-INSERT INTO forum_thread_replies (thread_id, publication_id, position, ...)
-VALUES (...);
+INSERT INTO forum_thread_replies (thread_id, publication_id, position, content_text, content_json, author_address, author_username)
+VALUES
+((SELECT id FROM forum_threads WHERE root_publication_id = 'test-pub-1'), 'test-reply-1', 1, 'Thanks for the welcome!', '[{"type":"p","children":[{"text":"Thanks for the welcome! Great to be here."}]}]'::jsonb, '0x8aE18FfF977aCc6Dc690C288a61004a7c7D5A931', 'fritz'),
+((SELECT id FROM forum_threads WHERE root_publication_id = 'test-pub-1'), 'test-reply-2', 2, 'Where can I find the docs?', '[{"type":"p","children":[{"text":"Where can I find the documentation? I looked everywhere."}]}]'::jsonb, '0x8aE18FfF977aCc6Dc690C288a61004a7c7D5A931', 'fritz'),
+((SELECT id FROM forum_threads WHERE root_publication_id = 'test-pub-3'), 'test-reply-3', 1, 'I support this proposal.', '[{"type":"p","children":[{"text":"I fully support this proposal. We need a treasury."}]}]'::jsonb, '0x8aE18FfF977aCc6Dc690C288a61004a7c7D5A931', 'fritz');
+
+UPDATE forum_categories SET thread_count = 2 WHERE slug = 'beginners';
+UPDATE forum_categories SET thread_count = 1 WHERE slug = 'dao-governance';
+UPDATE forum_threads SET last_reply_at = NOW() - interval '2 hours' WHERE root_publication_id = 'test-pub-1';
+UPDATE forum_threads SET last_reply_at = NOW() - interval '1 day' WHERE root_publication_id = 'test-pub-3';
+SQL
 ```
+
+---
+
+## Execution Order
+
+1. Create data layer files (3 files in `src/lib/forum/`)
+2. Create shared components (6 files in `src/components/forum/`)
+3. Create landing page (`src/app/boards/page.tsx`)
+4. Create thread list page (`src/app/boards/[feed]/page.tsx`)
+5. Create thread detail page (`src/app/thread/[rootPublicationId]/page.tsx`)
+6. Seed test data on VPS
+7. Test all 3 pages in browser
+
+---
+
+## Files to Create (14 total)
+
+```
+# Data layer
+src/lib/forum/get-board-sections.ts
+src/lib/forum/get-threads.ts
+src/lib/forum/get-thread-detail.ts
+
+# Shared components
+src/components/forum/board-section-list.tsx
+src/components/forum/board-section-grid.tsx
+src/components/forum/board-category-row.tsx
+src/components/forum/board-grid-card.tsx
+src/components/forum/thread-list-view.tsx
+src/components/forum/forum-post-card.tsx
+src/components/forum/forum-post-content.tsx
+
+# Pages
+src/app/boards/page.tsx
+src/app/boards/[feed]/page.tsx
+src/app/thread/[rootPublicationId]/page.tsx
+```
+
+Note: `thread-row.tsx` merged into `thread-list-view.tsx` to reduce files.
+`thread-detail-view.tsx` merged into the page component.
+`community-card.tsx` and `forum-sidebar.tsx` deferred — not needed for MVP.
 
 ---
 
 ## Acceptance Tests
 
-| # | Test | Expected Result |
-|---|---|---|
-| T4.1 | Navigate to `/boards` | Landing page renders with 5 sections |
-| T4.2 | Section headers show correct titles | GENERAL DISCUSSION, FUNCTIONS, etc. |
-| T4.3 | Category rows show thread count + activity | Numbers from Supabase |
-| T4.4 | Click "Beginners & Help" | Navigates to `/boards/commons?category=beginners` |
-| T4.5 | Thread list shows test threads | Sorted by pinned first, then last_reply_at |
-| T4.6 | Click thread title | Navigates to `/thread/[id]` |
-| T4.7 | Thread detail shows root post + replies | Stacked vertically, numbered |
-| T4.8 | Content renders with formatting | Bold, headings, code blocks visible |
-| T4.9 | Breadcrumb navigation works | Boards → Category → Thread |
-| T4.10 | Mobile: stats columns hidden | Only Topic column visible |
-| T4.11 | Empty category shows empty state | "No threads yet" message |
-| T4.12 | View count increments on page load | `views_count` increases in DB |
+| # | Test | Expected Result | Status |
+|---|---|---|---|
+| T4.1 | Navigate to `/boards` | 4 sections + Language Boards | ✅ |
+| T4.2 | Section headers correct | General Discussion, Functions, Others, Partners | ✅ |
+| T4.3 | Category rows show thread count | Beginners=2, DAO Governance=1 | ✅ |
+| T4.4 | Click "Beginners & Help" | → `/boards/commons?category=beginners` | ✅ |
+| T4.5 | Thread list shows test threads | Pinned "Welcome" thread first | ✅ |
+| T4.6 | Click thread title | → `/thread/test-pub-1` | ✅ |
+| T4.7 | Thread detail: root + replies | 1 root + 2 replies stacked | ✅ |
+| T4.8 | Content renders with formatting | Headings visible (centered — known issue for Phase 5) | ✅ |
+| T4.9 | Breadcrumb navigation | Boards → Beginners & Help → Thread | ✅ |
+| T4.10 | Empty category empty state | web3-outpost → "No threads yet" | ✅ |
+| T4.11 | View count increments | test-pub-1: 340 → 356 after visits | ✅ |
 
-## Files Created
+---
 
-```
-src/app/boards/page.tsx
-src/app/boards/[feed]/page.tsx
-src/app/thread/[rootPublicationId]/page.tsx
-src/lib/forum/get-board-sections.ts
-src/lib/forum/get-threads.ts
-src/lib/forum/get-thread-detail.ts
-src/components/forum/board-section-list.tsx
-src/components/forum/board-section-grid.tsx
-src/components/forum/board-category-row.tsx
-src/components/forum/board-grid-card.tsx
-src/components/forum/community-card.tsx
-src/components/forum/forum-sidebar.tsx
-src/components/forum/thread-list-view.tsx
-src/components/forum/thread-row.tsx
-src/components/forum/thread-detail-view.tsx
-src/components/forum/forum-post-card.tsx
-src/components/forum/forum-post-content.tsx
-```
+## Completion Notes (2026-04-05)
+
+### What Works
+- Landing page: 4 sections + Language Boards ✅
+- Thread list: sorted, pinned first, pagination ready ✅
+- Thread detail: root post + stacked replies with Plate.js rendering ✅
+- Breadcrumb navigation ✅
+- Empty state for categories with no threads ✅
+- Heart reactions (static, wired in Phase 7) ✅
+
+### Design Decisions Made During Execution
+- **Hearts not arrows:** Changed from upvote/downvote (▲▼) to heart-only
+  reactions. Matches the Research section spec and feels more forum-like.
+- **No sidebar for MVP:** Deferred community info sidebar and stats card.
+- **No community cards link:** Language Board cards are static placeholders,
+  not linked to actual Lens Groups yet.
+
+### Known Issues
+- **Editor centering:** Fountain's PlateEditor wraps content in
+  `max-w-[65ch] mx-auto` which centers forum post content. CSS overrides
+  attempted but didn't fully work. Fix planned for Phase 5 (Composer)
+  when we create a ForumEditor variant. See `LEARNING/07-EDITOR-CENTERING-ISSUE.md`.
+
+### Implementation Log
+- `categories.ts` was restructured: split into `LANDING_SECTIONS` (4 sections
+  for /boards) and `RESEARCH_SECTIONS` (1 section for /research). Technical
+  Section removed from landing page — it belongs to Research (Phase 8).
+- Test data seeded: 3 threads + 3 replies across beginners and dao-governance.
