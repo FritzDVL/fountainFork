@@ -1,6 +1,7 @@
 import { Heart } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
 import { ForumPostContent } from "./forum-post-content";
+import { OnchainBadge } from "./onchain-badge";
 
 interface ForumPostCardProps {
   contentJson: any | null;
@@ -12,6 +13,8 @@ interface ForumPostCardProps {
   position: number;
   isRoot?: boolean;
   replyButton?: React.ReactNode;
+  publicationId?: string;
+  contentUri?: string;
 }
 
 export function ForumPostCard({
@@ -23,6 +26,7 @@ export function ForumPostCard({
   position,
   isRoot = false,
   replyButton,
+  publicationId,
 }: ForumPostCardProps) {
   return (
     <div className="border-b py-6 first:pt-0 last:border-b-0">
@@ -43,12 +47,15 @@ export function ForumPostCard({
             </div>
           </div>
         </div>
+
+        {/* Onchain badge — top right */}
+        <OnchainBadge publicationId={publicationId} authorUsername={authorUsername} />
       </div>
 
       {/* Content */}
       <ForumPostContent contentJson={contentJson} />
 
-      {/* Heart reaction (static for now — wired in Phase 7) */}
+      {/* Footer: heart + reply */}
       <div className="flex items-center gap-3 mt-4 text-sm text-muted-foreground">
         <button className="hover:text-red-500 transition-colors" type="button">
           <Heart className="h-4 w-4" />

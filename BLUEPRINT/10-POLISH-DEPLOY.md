@@ -13,6 +13,17 @@ All previous phases.
 
 ## Steps
 
+### 10.0 Standalone Article Page Cleanup
+
+The `/p/[user]/[post]` page (Fountain's article view) is used as the
+"Onchain" view for forum posts. Remove these sections for forum posts:
+- **Comment section** (`CommentPreview`) — forum handles replies via threads
+- **Read More section** (`ReadMore`) — links to unrelated Fountain articles
+
+File: `src/app/p/[user]/[post]/page.tsx`
+Study how it renders, conditionally hide these sections when the post
+has a `forumCategory` or `forumThreadId` attribute.
+
 ### 10.1 Caching & ISR
 
 | Page | Strategy | Revalidation |

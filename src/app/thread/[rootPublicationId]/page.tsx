@@ -56,6 +56,7 @@ export default async function ThreadPage({ params }: Props) {
         downvotes={thread.downvotes}
         position={0}
         isRoot
+        publicationId={thread.rootPublicationId}
         replyButton={<ReplyButton rootPublicationId={thread.rootPublicationId} feed={thread.feed as FeedType} threadTitle={thread.title} />}
       />
 
@@ -70,6 +71,7 @@ export default async function ThreadPage({ params }: Props) {
           upvotes={reply.upvotes}
           downvotes={reply.downvotes}
           position={reply.position}
+          publicationId={reply.publicationId}
           replyButton={<ReplyButton rootPublicationId={thread.rootPublicationId} feed={thread.feed as FeedType} threadTitle={thread.title} />}
         />
       ))}

@@ -40,8 +40,8 @@ All specs were derived from merging:
 | 3 | [Database](./03-DATABASE.md) | Forum tables + seed data in Supabase | ✅ DONE | 2026-04-05 |
 | 4 | [Forum Pages](./04-FORUM-PAGES.md) | Landing, board list, thread detail pages | ✅ DONE | 2026-04-05 |
 | 5 | [Composer](./05-COMPOSER.md) | Discourse-style bottom panel composer | ✅ DONE | 2026-04-05 |
-| 6 | [Publish Flow](./06-PUBLISH-FLOW.md) | Thread creation + reply publishing | ⬜ Next | — |
-| 7 | [Forum Features](./07-FORUM-FEATURES.md) | Voting, moderation, quote-reply | ⬜ Blocked | — |
+| 6 | [Publish Flow](./06-PUBLISH-FLOW.md) | Thread creation + reply publishing | ✅ DONE | 2026-04-06 |
+| 7 | [Forum Features](./07-FORUM-FEATURES.md) | Voting, moderation, quote-reply | ⬜ Next | — |
 | 8 | [Research Section](./08-RESEARCH.md) | Token-gated research with categories + tags | ⬜ Blocked | — |
 | 9 | [Recovery & Sync](./09-RECOVERY-SYNC.md) | Background sync + full recovery script | ⬜ Blocked | — |
 | 10 | [Polish & Deploy](./10-POLISH-DEPLOY.md) | SEO, caching, error handling, production | ⬜ Blocked | — |

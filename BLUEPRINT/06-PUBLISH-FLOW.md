@@ -1,16 +1,18 @@
-# Phase 6: Publish Flow — Threads & Replies (UPDATED)
+# Phase 6: Publish Flow — Threads & Replies
 
 ## Goal
 
-Wire the composer's "Create Topic" and "Post Reply" buttons to actually
-publish. Every post (thread root OR reply) is a standalone Lens article
-published to the same feed. Thread structure is tracked ONLY in Supabase.
-NO `commentOn`. NO Lens-level linking.
+Make the "Create Topic" and "Post Reply" buttons actually work.
+When a user writes something in the composer and clicks submit,
+it should:
+1. Publish to Lens Protocol (permanent, onchain)
+2. Save to our Supabase database (fast display)
+3. Show up on the forum immediately
 
 ## Depends On
 
-- Phase 2 ✅ (feeds exist onchain)
-- Phase 5 ✅ (composer UI exists, submit button logs to console)
+- Phase 2 ✅ (Groups + Feeds exist onchain)
+- Phase 5 ✅ (Composer UI works, submit button exists but does nothing)
 
 ---
 
@@ -18,210 +20,208 @@ NO `commentOn`. NO Lens-level linking.
 
 From CoreConceptV5.md:
 > NOT used: `commentOn`, Lens native comments, per-user blogs/feeds.
-> No `commentOn`. No Lens-level linking. Thread structure is pure Supabase.
 
-Every reply is a **standalone Lens publication**. On Lens, a reply looks
-identical to a thread root — just another article in the feed. The only
-difference is that Supabase knows it belongs to a thread (via `thread_id`
-foreign key in `forum_thread_replies`).
-
-Recovery uses the `forumThreadId` metadata attribute to reconstruct
-thread membership — NOT `commentOn` relationships.
+Every post — whether it starts a thread or replies to one — is a
+**standalone Lens article**. On Lens, they all look the same. The
+thread structure (which reply belongs to which thread) exists ONLY
+in our Supabase database.
 
 ---
 
-## What We Reuse From Fountain
+## How Fountain Already Does This
 
-### Publishing pipeline (from `publish-post.ts`):
-1. `getUserAccount()` → get address + username from Lens session
-2. `article({ title, content, locale, tags, attributes })` → Lens metadata
-3. `storageClient.uploadAsJson(metadata)` → upload to Grove → `contentUri`
-4. `post(lens, { contentUri, feed })` → publish to Lens (NO commentOn)
-5. `handleOperationWith(walletClient)` → sign with wallet
-6. `lens.waitForTransaction` → wait for confirmation
-7. `fetchPost(lens, { txHash })` → get the created post
+Fountain publishes articles via `src/lib/publish/publish-post.ts`.
+Our forum publish does the SAME thing with minor differences:
 
-### Key imports:
-- `storageClient` from `@/lib/lens/storage-client`
-- `article` from `@lens-protocol/metadata`
-- `post`, `fetchPost` from `@lens-protocol/client/actions`
-- `handleOperationWith` from `@lens-protocol/client/viem`
-- `getLensClient` from `@/lib/lens/client`
-- `getUserAccount` from `@/lib/auth/get-user-profile`
+```
+FOUNTAIN:                           FORUM:
+1. Get user info                    1. Get user info (same)
+2. Convert to markdown              2. Convert to markdown (same)
+3. Build metadata attributes        3. Build attributes (different keys)
+4. Create article metadata          4. Create article metadata (same)
+5. Upload to Grove storage          5. Upload to Grove (same)
+6. Get blog's feed address          6. Get forum feed address (different)
+7. Publish to Lens                  7. Publish to Lens (same, NO commentOn)
+8. Sign with wallet                 8. Sign with wallet (same)
+9. Save to Supabase `posts` table   9. Save to Supabase `forum_threads` table
+```
 
-### Markdown serialization:
-`MarkdownPlugin` from `@udecode/plate-markdown` provides
-`api.markdown.serialize({ value: editor.children })`.
-We use this to convert Plate.js JSON → markdown for the Lens `content` field.
+The only real differences are steps 3, 6, and 9. Everything else is
+identical. We reuse Fountain's functions directly.
+
+### Files to study before coding:
+
+| Fountain file | What to learn from it |
+|---|---|
+| `src/lib/publish/publish-post.ts` | The full pipeline — our code follows this |
+| `src/components/editor/addons/editor-autosave.tsx` line 37 | How to get markdown from the editor |
+| `src/lib/publish/get-post-attributes.ts` | How to build metadata attributes |
+| `src/lib/lens/storage-client.ts` | Grove upload — we use this as-is |
+| `src/lib/auth/get-user-profile.ts` | Get user address + username — as-is |
+
+### The markdown problem (solved)
+
+Lens requires a `content` field with at least 1 character of markdown.
+Fountain gets markdown from the editor using:
+```ts
+const { api } = useEditorPlugin(MarkdownPlugin);
+const markdown = api.markdown.serialize({ value: editor.children });
+```
+
+This ONLY works inside the Plate.js editor React context. You can't
+call it from outside. Our `ForumEditor` component exposes this via
+an `editorRef` callback that gives the composer both `getContentJson()`
+and `getContentMarkdown()`.
 
 ---
 
-## Execution Order
+## What's Different: Thread vs Reply
 
-### Step 6.1: Create ForumDraft Type
+Both are standalone Lens articles. The only differences:
+
+| | Thread (new topic) | Reply |
+|---|---|---|
+| Metadata attribute | `forumCategory: "beginners"` | `forumThreadId: "pub-id-of-root"` |
+| Supabase table | `forum_threads` | `forum_thread_replies` |
+| API route | `POST /api/forum/threads` | `POST /api/forum/replies` |
+| Lens `post()` call | Identical | Identical (NO commentOn) |
+| Feed | From category config | Same feed as the thread |
+
+---
+
+## Execution Steps
+
+### Step 6.1: ForumDraft Type ✅ DONE
 **File:** `src/lib/forum/types.ts`
 
-```ts
-export interface ForumDraft {
-  title: string;
-  contentJson: any;          // Plate.js JSON (editor.children)
-  contentMarkdown: string;   // Markdown for Lens metadata
-  tags?: string[];
-}
-```
+A lightweight type for what the publish functions need:
+- `title` — thread title (empty for replies)
+- `contentJson` — Plate.js editor JSON
+- `contentMarkdown` — markdown text for Lens metadata
+- `tags` — optional tags
 
-### Step 6.2: Create Publish Thread Service
+### Step 6.2: Publish Thread Service ✅ DONE
 **File:** `src/lib/forum/publish-thread.ts`
 
-```
-Input:  ForumDraft + category slug + walletClient
-Output: { success: true, publicationId } or { success: false, error }
+What it does:
+1. Validates the category exists
+2. Gets the logged-in user's info
+3. Builds Lens metadata with `forumCategory` attribute
+4. Uploads metadata to Grove → gets a `contentUri`
+5. Publishes to Lens on the correct feed (commons or research)
+6. Waits for the transaction to confirm
+7. Fetches the created post to get its ID
+8. Calls our API to save it in Supabase
 
-Pipeline:
-1. getCategoryBySlug(category) → validate + get feed type
-2. getLensClient() → get session client
-3. getUserAccount() → get address + username
-4. Build attributes: [contentJson, forumCategory]
-5. article({ title, content: markdown, locale, tags, attributes })
-6. storageClient.uploadAsJson(metadata) → contentUri
-7. FEED_MAP[cat.feed] → feed address
-8. post(lens, { contentUri, feed })  ← NO commentOn
-9. handleOperationWith(walletClient) → sign
-10. lens.waitForTransaction → txHash
-11. fetchPost(lens, { txHash }) → publicationId
-12. POST /api/forum/threads → track in Supabase
-```
-
-### Step 6.3: Create Thread Tracking API Route
+### Step 6.3: Thread Tracking API ✅ DONE
 **File:** `src/app/api/forum/threads/route.ts`
 
-```
-POST /api/forum/threads
-Body: { publicationId, contentUri, feed, category, title, summary,
-        contentText, contentJson, authorAddress, authorUsername }
+Server-side endpoint that:
+1. Receives the publication data from the client
+2. Inserts a row into `forum_threads` (with content_json for fast rendering)
+3. Increments the category's thread count
 
-1. createClient() (server client)
-2. INSERT into forum_threads (including content_json)
-3. RPC forum_add_thread_to_category(category)
-4. Return { success: true }
-```
-
-### Step 6.4: Create Publish Reply Service
+### Step 6.4: Publish Reply Service ✅ DONE
 **File:** `src/lib/forum/publish-reply.ts`
 
-```
-Input:  ForumDraft + threadRootPublicationId + feed + walletClient
-Output: { success: true, publicationId } or { success: false, error }
+Same as thread publishing but:
+- Uses `forumThreadId` attribute (not `forumCategory`)
+- Calls `/api/forum/replies` (not `/api/forum/threads`)
+- NO `commentOn` — it's a standalone article
 
-Pipeline — SAME as thread, but:
-- Attribute: forumThreadId (instead of forumCategory)
-- post(lens, { contentUri, feed })  ← SAME call, NO commentOn
-- Tracks via POST /api/forum/replies (not /api/forum/threads)
-```
-
-The reply is published as a standalone article to the SAME feed as the
-thread root. On Lens, it's indistinguishable from a root post. Only
-Supabase knows it's a reply (via thread_id + position).
-
-### Step 6.5: Create Reply Tracking API Route
+### Step 6.5: Reply Tracking API ✅ DONE
 **File:** `src/app/api/forum/replies/route.ts`
 
-```
-POST /api/forum/replies
-Body: { threadRootPublicationId, publicationId, contentUri,
-        contentText, contentJson, summary, authorAddress, authorUsername }
+Server-side endpoint that:
+1. Finds the parent thread by `root_publication_id`
+2. Calculates position (reply_count + 1)
+3. Inserts a row into `forum_thread_replies`
+4. Updates the thread's reply_count and last_reply_at
 
-1. Find thread by root_publication_id
-2. position = reply_count + 1
-3. INSERT into forum_thread_replies
-4. RPC forum_add_reply(thread_id, now())
-5. Return { success: true, position }
-```
+### Step 6.6: Wire Composer Submit ✅ DONE
+**File:** `src/components/forum/composer-panel.tsx`
 
-### Step 6.6: Wire Composer Submit Button
-Update `src/components/forum/composer-panel.tsx`:
-- Thread mode: calls `publishThread()` with title, category (from URL),
-  editor content, walletClient
-- Reply mode: calls `publishReply()` with editor content, threadRef, walletClient
-- On success: close composer, refresh page, toast
-- On failure: keep composer open, error toast
+The submit button now:
+- Gets content JSON + markdown from the editor via `editorRef`
+- In thread mode: reads category from URL, calls `publishThread()`
+- In reply mode: uses threadRef from composer state, calls `publishReply()`
+- Shows loading toast during publish
+- On success: closes composer, navigates to thread, refreshes page
+- On failure: shows error toast, keeps composer open
 
 ### Step 6.7: Join Groups Before First Post
-User must join the group that gates the feed. Since groups are open,
-`joinGroup()` is instant. Auto-join on first post attempt.
+**Status:** Not yet done
+
+User must be a member of the group that gates the feed. Since our
+groups are open (no approval needed), `joinGroup()` is instant.
+If publishing fails with a group error, we need to auto-join.
 
 ### Step 6.8: Test End-to-End
+**Status:** Not yet done
 
 ---
 
-## Onchain Result After Publishing
+## What Gets Created on Lens
 
 ```
-Publication A (thread root)
+Publication A (thread root — standalone article)
   ├─ feed: COMMONS_FEED
-  ├─ metadata.attributes: [forumCategory: "beginners", contentJson: {...}]
-  └─ NO commentOn — standalone article
+  └─ metadata.attributes:
+       forumCategory: "beginners"
+       contentJson: { ... plate.js json ... }
 
-Publication B (reply to thread A)
+Publication B (reply — also standalone article)
   ├─ feed: COMMONS_FEED
-  ├─ metadata.attributes: [forumThreadId: "A", contentJson: {...}]
-  └─ NO commentOn — standalone article (looks same as A on Lens)
-
-Publication C (another reply to thread A)
-  ├─ feed: COMMONS_FEED
-  ├─ metadata.attributes: [forumThreadId: "A", contentJson: {...}]
-  └─ NO commentOn — standalone article
+  └─ metadata.attributes:
+       forumThreadId: "A"          ← points to root's ID
+       contentJson: { ... plate.js json ... }
 ```
 
-On Lens/Hey.xyz: A, B, C all look like independent articles.
-On our forum: B and C are replies #1 and #2 in thread A (Supabase knows).
+On Lens/Hey.xyz: A and B look like independent articles.
+On our forum: B is reply #1 in thread A (Supabase knows this).
 
 ---
 
-## Recovery (How Thread Structure Survives Without commentOn)
+## How Recovery Works (If Supabase Dies)
 
-If Supabase is lost, recovery reads the `forumThreadId` attribute:
-- Posts with `forumCategory` attribute → thread roots
-- Posts with `forumThreadId` attribute → replies (value = root's publication ID)
+Read all posts from the feed. Check metadata attributes:
+- Has `forumCategory`? → It's a thread root
+- Has `forumThreadId`? → It's a reply (value = root's publication ID)
 - Order replies by timestamp → reconstruct positions
 
-This is the "belt and suspenders" approach from CoreConceptV5.
+No `commentOn` needed. Pure metadata attributes.
 
 ---
 
-## Files to Create
+## Files Created
 
 ```
-src/lib/forum/types.ts                    — ForumDraft interface
-src/lib/forum/publish-thread.ts           — thread publish pipeline
-src/lib/forum/publish-reply.ts            — reply publish pipeline
-src/app/api/forum/threads/route.ts        — thread tracking API
-src/app/api/forum/replies/route.ts        — reply tracking API
-```
-
-## Files to Update
-
-```
-src/components/forum/composer-panel.tsx    — wire submit to publish functions
+src/lib/forum/types.ts                 ✅ ForumDraft interface
+src/lib/forum/publish-thread.ts        ✅ Thread publish pipeline
+src/lib/forum/publish-reply.ts         ✅ Reply publish pipeline
+src/app/api/forum/threads/route.ts     ✅ Thread tracking API
+src/app/api/forum/replies/route.ts     ✅ Reply tracking API
+src/components/forum/composer-panel.tsx ✅ Updated with publish wiring
+src/components/forum/forum-editor.tsx   ✅ Updated with editorRef for markdown
 ```
 
 ---
 
 ## Acceptance Tests
 
-| # | Test | Expected Result |
-|---|---|---|
-| T6.1 | Open composer, write content, submit | Thread published to Lens |
-| T6.2 | Check Hey.xyz | Post visible with your app name |
-| T6.3 | Check `forum_threads` table | Row exists with correct category |
-| T6.4 | Check `forum_categories` thread_count | Incremented by 1 |
-| T6.5 | Check `content_json` column | Plate.js JSON stored |
-| T6.6 | Navigate to `/thread/[id]` | New thread renders |
-| T6.7 | Open reply composer, submit | Reply published as standalone article |
-| T6.8 | Check `forum_thread_replies` table | Row with correct position |
-| T6.9 | Thread `reply_count` updated | Incremented |
-| T6.10 | Thread `last_reply_at` updated | Set to reply time |
-| T6.11 | Refresh thread page | New reply appears |
-| T6.12 | `forumCategory` attribute on Lens | Present in thread metadata |
-| T6.13 | `forumThreadId` attribute on Lens | Present in reply metadata |
-| T6.14 | Reply has NO `commentOn` on Lens | Standalone article, not a comment |
+| # | Test | Expected Result | Status |
+|---|---|---|---|
+| T6.1 | Open composer, write, submit | Thread published to Lens | ⬜ |
+| T6.2 | Check Hey.xyz | Post visible with your app name | ⬜ |
+| T6.3 | Check `forum_threads` table | Row with correct category | ⬜ |
+| T6.4 | Check `forum_categories` thread_count | Incremented | ⬜ |
+| T6.5 | Check `content_json` column | Plate.js JSON stored | ⬜ |
+| T6.6 | Navigate to `/thread/[id]` | New thread renders | ⬜ |
+| T6.7 | Reply via composer | Reply published as standalone | ⬜ |
+| T6.8 | Check `forum_thread_replies` | Row with correct position | ⬜ |
+| T6.9 | Thread `reply_count` | Incremented | ⬜ |
+| T6.10 | Thread `last_reply_at` | Updated | ⬜ |
+| T6.11 | Refresh thread page | New reply appears | ⬜ |
+| T6.12 | `forumCategory` on Lens | Present in metadata | ⬜ |
+| T6.13 | `forumThreadId` on Lens | Present in reply metadata | ⬜ |
+| T6.14 | Reply has NO `commentOn` | Standalone article | ⬜ |
