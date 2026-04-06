@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, PenSquare } from "lucide-react";
 import { useComposer } from "@/hooks/forum/use-composer";
 import { ComposerHeader } from "./composer-header";
 import { ForumEditor, type ForumEditorHandle } from "./forum-editor";
@@ -16,6 +16,8 @@ import type { ForumDraft } from "@/lib/forum/types";
 export function ComposerPanel() {
   const { state, close } = useComposer();
   const [title, setTitle] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
   const editorHandleRef = useRef<ForumEditorHandle | null>(null);
   const router = useRouter();
@@ -23,6 +25,8 @@ export function ComposerPanel() {
 
   const isOpen = state.status === "open";
   if (!isOpen) return null;
+
+  const isResearch = typeof window !== "undefined" && window.location.pathname.startsWith("/research");
 
   const getCategoryFromUrl = () => {
     if (typeof window === "undefined") return "";
@@ -53,7 +57,7 @@ export function ComposerPanel() {
       title: title || "Untitled",
       contentJson,
       contentMarkdown: contentMarkdown || title || "Post",
-      tags: [],
+      tags: tags,
     };
 
     setIsPublishing(true);
@@ -61,7 +65,7 @@ export function ComposerPanel() {
 
     try {
       if (state.mode === "thread") {
-        const category = getCategoryFromUrl();
+        const category = isResearch ? selectedCategory : getCategoryFromUrl();
         if (!category) {
           toast.dismiss(pending);
           toast.error("Could not determine category");
@@ -76,6 +80,8 @@ export function ComposerPanel() {
           toast.success("Thread published!");
           close();
           setTitle("");
+          setTags([]);
+          setSelectedCategory("");
           router.push(`/thread/${result.publicationId}`);
           router.refresh();
         } else {
@@ -108,36 +114,49 @@ export function ComposerPanel() {
 
   return (
     <>
-      <style>{`:root { --composer-height: 50vh; }`}</style>
+      <style>{`:root { --composer-height: 60vh; }`}</style>
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 h-[50vh] bg-background border-t flex flex-col animate-in slide-in-from-bottom duration-200">
-        <div className="flex items-center justify-between px-4 py-2 border-b shrink-0">
-          <span className="text-sm font-medium">
+      <div className="fixed bottom-0 left-0 right-0 z-40 h-[60vh] bg-background border-t-2 border-border shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-200">
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-4 py-2.5 border-b bg-muted/30 shrink-0">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <PenSquare className="h-4 w-4" />
             {state.mode === "thread" ? "New Thread" : "Reply"}
-          </span>
+          </div>
           <Button variant="ghost" size="sm" onClick={close} disabled={isPublishing}>
             <X className="h-4 w-4" />
           </Button>
         </div>
 
+        {/* Header (title / reply info) */}
         <ComposerHeader
           mode={state.mode}
           title={title}
           onTitleChange={setTitle}
-          category=""
-          onCategoryChange={() => {}}
+          category={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          tags={tags}
+          onTagsChange={setTags}
+          isResearch={isResearch}
           threadRef={state.threadRef}
+          availableTags={["game-theory", "function-ideas", "hunting", "property", "parenting", "governance", "organizations", "curation", "farming", "portal", "communication"]}
         />
 
-        <div className="flex-1 overflow-y-auto px-4">
+        {/* Editor with toolbar */}
+        <div className="flex-1 overflow-y-auto">
           <ForumEditor
             readOnly={false}
+            value={state.quotedText ? JSON.stringify([
+              { type: "blockquote", children: [{ type: "p", children: [{ text: state.quotedText }] }] },
+              { type: "p", children: [{ text: "" }] },
+            ]) : undefined}
             editorRef={(handle) => { editorHandleRef.current = handle; }}
           />
         </div>
 
-        <div className="flex items-center justify-end px-4 py-3 border-t shrink-0">
-          <Button onClick={handleSubmit} disabled={isPublishing}>
+        {/* Submit bar */}
+        <div className="flex items-center justify-end px-4 py-3 border-t bg-muted/20 shrink-0">
+          <Button size="lg" onClick={handleSubmit} disabled={isPublishing}>
             {isPublishing
               ? "Publishing..."
               : state.mode === "thread" ? "Create Topic" : "Post Reply"}

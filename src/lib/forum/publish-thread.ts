@@ -35,9 +35,11 @@ export async function publishThread(
     { key: "forumCategory", type: MetadataAttributeType.STRING, value: category },
   ];
 
+  const forumUrl = "https://forum.societyprotocol.io";
+
   const metadata = article({
     title: draft.title || "Untitled",
-    content: draft.contentMarkdown || "",
+    content: `${draft.title || "Untitled"} — ${forumUrl}`,
     locale: "en",
     tags: [category, ...(draft.tags || [])],
     attributes,
@@ -80,6 +82,7 @@ export async function publishThread(
       contentJson: draft.contentJson,
       authorAddress: address,
       authorUsername: username,
+      tags: draft.tags || [],
     }),
   });
 

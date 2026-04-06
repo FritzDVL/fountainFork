@@ -27,6 +27,7 @@ export const Header = ({ session }: { session: MeResult | null }) => {
   const isSettingsPage = pathname.startsWith("/settings");
   const isBlogPage = pathname.startsWith("/b/");
   const isPostPage = pathname.startsWith("/p/");
+  const isForumPage = pathname.startsWith("/boards") || pathname.startsWith("/thread") || pathname.startsWith("/research");
   const pathSegments = pathname.split("/").filter(Boolean);
   const blogId = isBlogPage && pathSegments.length >= 2 ? pathSegments[1] : undefined;
   const blogSlug = isBlogPage && pathSegments.length >= 3 ? pathSegments[2] : undefined;
@@ -73,7 +74,15 @@ export const Header = ({ session }: { session: MeResult | null }) => {
         {isBlogPage && blogData && <BlogEmailSubscribe blogData={blogData} variant="default" />}
         {isWritePage && <PublishMenu documentId={documentId} />}
         {isWritePage && <EditorOptionsDropdown documentId={documentId} collaborative={isCollaborative} />}
-        {!isWritePage && !isMobile && <DraftCreateButton />}
+        {!isWritePage && !isMobile && !isForumPage && <DraftCreateButton />}
+        {!isWritePage && !isMobile && isForumPage && (
+          <Link
+            href="/research"
+            className="inline-flex items-center h-10 px-4 rounded-md text-sm font-medium border border-amber-700/40 bg-amber-700/10 text-amber-800 hover:bg-amber-700/20 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-400 dark:hover:bg-amber-500/25 transition-colors"
+          >
+            🔒 Research
+          </Link>
+        )}
         {isAuthenticated && <NotificationButton />}
         <UserMenu session={session} showDropdown={true} />
       </div>

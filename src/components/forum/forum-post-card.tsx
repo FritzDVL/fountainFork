@@ -1,7 +1,7 @@
-import { Heart } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
 import { ForumPostContent } from "./forum-post-content";
 import { OnchainBadge } from "./onchain-badge";
+import { HeartButton } from "./heart-button";
 
 interface ForumPostCardProps {
   contentJson: any | null;
@@ -13,6 +13,7 @@ interface ForumPostCardProps {
   position: number;
   isRoot?: boolean;
   replyButton?: React.ReactNode;
+  modActions?: React.ReactNode;
   publicationId?: string;
   contentUri?: string;
 }
@@ -26,6 +27,7 @@ export function ForumPostCard({
   position,
   isRoot = false,
   replyButton,
+  modActions,
   publicationId,
 }: ForumPostCardProps) {
   return (
@@ -55,13 +57,11 @@ export function ForumPostCard({
       {/* Content */}
       <ForumPostContent contentJson={contentJson} />
 
-      {/* Footer: heart + reply */}
-      <div className="flex items-center gap-3 mt-4 text-sm text-muted-foreground">
-        <button className="hover:text-red-500 transition-colors" type="button">
-          <Heart className="h-4 w-4" />
-        </button>
-        {upvotes > 0 && <span className="text-xs">{upvotes}</span>}
+      {/* Footer: heart + reply + mod */}
+      <div className="flex items-center gap-3 mt-4">
+        <HeartButton publicationId={publicationId || ""} initialCount={upvotes} />
         {replyButton}
+        {modActions}
       </div>
     </div>
   );

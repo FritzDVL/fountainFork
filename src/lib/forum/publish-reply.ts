@@ -32,9 +32,11 @@ export async function publishReply(
     { key: "forumThreadId", type: MetadataAttributeType.STRING, value: threadRootPublicationId },
   ];
 
+  const forumUrl = "https://forum.societyprotocol.io";
+
   const metadata = article({
     title: draft.title || "",
-    content: draft.contentMarkdown || "",
+    content: `${draft.title || "Reply"} — ${forumUrl}`,
     locale: "en",
     tags: draft.tags || [],
     attributes,

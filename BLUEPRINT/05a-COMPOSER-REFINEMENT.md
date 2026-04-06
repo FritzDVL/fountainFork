@@ -152,3 +152,24 @@ src/components/forum/composer-toolbar-buttons.tsx  — slim toolbar (if needed)
 | T5a.6 | Panel has shadow | Visually elevated above page content |
 | T5a.7 | Title input has border | Clearly visible input field |
 | T5a.8 | Editor area is taller | More writing space |
+
+---
+
+## Completion Notes (2026-04-06)
+
+### What Was Done
+- Added FixedToolbar with slim button set (no AI, no color pickers)
+- Removed Title/Subtitle plugins from forum editor
+- Panel: taller (60vh), shadow, stronger border, icon in header
+- Title input: visible border, focus ring, better placeholder
+- Submit button: larger size
+- Created `ComposerToolbarButtons` — forum-specific slim toolbar
+
+### Learnings
+- Fountain's `FixedToolbarButtons` includes an "Ask AI" button — too expensive
+  to run for users. Created a stripped-down `ComposerToolbarButtons` instead.
+- Title/Subtitle are Plate.js plugins (`TitlePlugin`, `SubtitlePlugin`) that
+  auto-insert at the top of the editor. Filtered them out for forum editor
+  since thread title comes from the composer header input.
+- Further refinements possible: dual-column preview, resize handle, minimize.
+  Parked for later.

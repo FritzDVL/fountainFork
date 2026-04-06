@@ -7,6 +7,7 @@ export interface Category {
   section: string;
   feed: FeedType;
   displayOrder: number;
+  color?: string;
 }
 
 export interface Section {
@@ -40,17 +41,17 @@ export const LANDING_SECTIONS: Section[] = [
     feed: "research",
     layout: "grid",
     categories: [
-      { slug: "game-theory", name: "Economic Game Theory", description: "Economic models and game theory.", section: "functions", feed: "research", displayOrder: 9 },
-      { slug: "function-ideas", name: "Function Ideas", description: "Propose and discuss new functions.", section: "functions", feed: "research", displayOrder: 10 },
-      { slug: "hunting", name: "Hunting", description: "Resource discovery strategies.", section: "functions", feed: "research", displayOrder: 11 },
-      { slug: "property", name: "Property", description: "Property rights and ownership.", section: "functions", feed: "research", displayOrder: 12 },
-      { slug: "parenting", name: "Parenting", description: "Community growth and mentorship.", section: "functions", feed: "research", displayOrder: 13 },
-      { slug: "governance-func", name: "Governance", description: "Decision-making structures.", section: "functions", feed: "research", displayOrder: 14 },
-      { slug: "organizations", name: "Organizations", description: "Organizational design.", section: "functions", feed: "research", displayOrder: 15 },
-      { slug: "curation", name: "Curation", description: "Content and quality curation.", section: "functions", feed: "research", displayOrder: 16 },
-      { slug: "farming", name: "Farming", description: "Value creation strategies.", section: "functions", feed: "research", displayOrder: 17 },
-      { slug: "portal", name: "Portal", description: "Gateway and integration.", section: "functions", feed: "research", displayOrder: 18 },
-      { slug: "communication", name: "Communication", description: "Communication protocols.", section: "functions", feed: "research", displayOrder: 19 },
+      { slug: "game-theory", name: "Economic Game Theory", description: "Economic models and game theory.", section: "functions", feed: "research", displayOrder: 9, color: "#10b981" },
+      { slug: "function-ideas", name: "Function Ideas", description: "Propose and discuss new functions.", section: "functions", feed: "research", displayOrder: 10, color: "#8b5cf6" },
+      { slug: "hunting", name: "Hunting", description: "Resource discovery strategies.", section: "functions", feed: "research", displayOrder: 11, color: "#84cc16" },
+      { slug: "property", name: "Property", description: "Property rights and ownership.", section: "functions", feed: "research", displayOrder: 12, color: "#f59e0b" },
+      { slug: "parenting", name: "Parenting", description: "Community growth and mentorship.", section: "functions", feed: "research", displayOrder: 13, color: "#ec4899" },
+      { slug: "governance-func", name: "Governance", description: "Decision-making structures.", section: "functions", feed: "research", displayOrder: 14, color: "#6366f1" },
+      { slug: "organizations", name: "Organizations", description: "Organizational design.", section: "functions", feed: "research", displayOrder: 15, color: "#14b8a6" },
+      { slug: "curation", name: "Curation", description: "Content and quality curation.", section: "functions", feed: "research", displayOrder: 16, color: "#f43f5e" },
+      { slug: "farming", name: "Farming", description: "Value creation strategies.", section: "functions", feed: "research", displayOrder: 17, color: "#22c55e" },
+      { slug: "portal", name: "Portal", description: "Gateway and integration.", section: "functions", feed: "research", displayOrder: 18, color: "#0ea5e9" },
+      { slug: "communication", name: "Communication", description: "Communication protocols.", section: "functions", feed: "research", displayOrder: 19, color: "#d946ef" },
     ],
   },
   {
@@ -92,12 +93,12 @@ export const RESEARCH_SECTIONS: Section[] = [
     feed: "research",
     layout: "list",
     categories: [
-      { slug: "architecture", name: "General Architecture", description: "System architecture and design.", section: "technical", feed: "research", displayOrder: 20 },
-      { slug: "state-machine", name: "State Machine", description: "State transitions and logic.", section: "technical", feed: "research", displayOrder: 21 },
-      { slug: "consensus", name: "Consensus (Proof of Hunt)", description: "Consensus mechanisms.", section: "technical", feed: "research", displayOrder: 22 },
-      { slug: "cryptography", name: "Cryptography", description: "Cryptographic primitives.", section: "technical", feed: "research", displayOrder: 23 },
-      { slug: "account-system", name: "Account System", description: "Accounts and identity.", section: "technical", feed: "research", displayOrder: 24 },
-      { slug: "security", name: "Security", description: "Security protocols.", section: "technical", feed: "research", displayOrder: 25 },
+      { slug: "architecture", name: "General Architecture", description: "System architecture and design.", section: "technical", feed: "research", displayOrder: 20, color: "#3b82f6" },
+      { slug: "state-machine", name: "State Machine", description: "State transitions and logic.", section: "technical", feed: "research", displayOrder: 21, color: "#a855f7" },
+      { slug: "consensus", name: "Consensus (Proof of Hunt)", description: "Consensus mechanisms.", section: "technical", feed: "research", displayOrder: 22, color: "#f97316" },
+      { slug: "cryptography", name: "Cryptography", description: "Cryptographic primitives.", section: "technical", feed: "research", displayOrder: 23, color: "#ef4444" },
+      { slug: "account-system", name: "Account System", description: "Accounts and identity.", section: "technical", feed: "research", displayOrder: 24, color: "#06b6d4" },
+      { slug: "security", name: "Security", description: "Security protocols.", section: "technical", feed: "research", displayOrder: 25, color: "#eab308" },
     ],
   },
 ];

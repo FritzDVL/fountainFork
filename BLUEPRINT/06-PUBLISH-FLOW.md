@@ -205,6 +205,20 @@ src/components/forum/composer-panel.tsx ✅ Updated with publish wiring
 src/components/forum/forum-editor.tsx   ✅ Updated with editorRef for markdown
 ```
 
+## Post-Completion Fix: Lens Display Mode
+
+After Phase 7, we discovered that full content was leaking to other
+apps' feeds. Fixed by using Fountain's "title_link" distribution mode:
+
+```ts
+// Instead of: content: draft.contentMarkdown
+// We use:     content: `${draft.title} — https://forum.societyprotocol.io`
+```
+
+This makes other apps show just a title + link, not the full text.
+The actual content is still in `contentJson` attribute and Grove.
+See `LEARNING/12-LENS-DISPLAY-MODE.md` for full explanation.
+
 ---
 
 ## Acceptance Tests

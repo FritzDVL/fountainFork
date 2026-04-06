@@ -5,6 +5,8 @@ import { getThreadDetail } from "@/lib/forum/get-thread-detail";
 import { getCategoryBySlug } from "@/lib/forum/categories";
 import { ForumPostCard } from "@/components/forum/forum-post-card";
 import { ReplyButton } from "@/components/forum/reply-button";
+import { ThreadModActions } from "@/components/forum/mod-actions";
+import { ReplyModActions } from "@/components/forum/mod-actions";
 import type { FeedType } from "@/lib/forum/constants";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +46,7 @@ export default async function ThreadPage({ params }: Props) {
         <div className="text-sm text-muted-foreground">
           {thread.replyCount} {thread.replyCount === 1 ? "reply" : "replies"} · {thread.viewsCount} views
         </div>
+        <ThreadModActions threadId={thread.id} isPinned={thread.isPinned} isLocked={thread.isLocked} />
       </div>
 
       {/* Root post */}
@@ -57,7 +60,7 @@ export default async function ThreadPage({ params }: Props) {
         position={0}
         isRoot
         publicationId={thread.rootPublicationId}
-        replyButton={<ReplyButton rootPublicationId={thread.rootPublicationId} feed={thread.feed as FeedType} threadTitle={thread.title} />}
+        replyButton={<ReplyButton rootPublicationId={thread.rootPublicationId} feed={thread.feed as FeedType} threadTitle={thread.title} quotedText={thread.contentJson ? "Original post content" : undefined} quotedAuthor={thread.authorUsername || undefined} quotedPosition={0} />}
       />
 
       {/* Replies */}
@@ -72,7 +75,8 @@ export default async function ThreadPage({ params }: Props) {
           downvotes={reply.downvotes}
           position={reply.position}
           publicationId={reply.publicationId}
-          replyButton={<ReplyButton rootPublicationId={thread.rootPublicationId} feed={thread.feed as FeedType} threadTitle={thread.title} />}
+          modActions={<ReplyModActions replyId={reply.id} />}
+          replyButton={<ReplyButton rootPublicationId={thread.rootPublicationId} feed={thread.feed as FeedType} threadTitle={thread.title} quotedText={reply.summary || reply.contentJson?.[0]?.children?.[0]?.text || undefined} quotedAuthor={reply.authorUsername || undefined} quotedPosition={reply.position} />}
         />
       ))}
 

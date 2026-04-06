@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
       content_json: body.contentJson,
       author_address: body.authorAddress,
       author_username: body.authorUsername,
+      tags: body.tags || [],
     });
 
     if (error) {

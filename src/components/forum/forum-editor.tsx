@@ -5,11 +5,12 @@ import { MarkdownPlugin } from "@udecode/plate-markdown";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { Editor, EditorContainer } from "@/components/ui/editor";
+import { FixedToolbar } from "@/components/ui/fixed-toolbar";
 import { FloatingToolbar } from "@/components/ui/floating-toolbar";
 import { FloatingToolbarButtons } from "@/components/ui/floating-toolbar-buttons";
 import { getEditorPlugins } from "@/components/editor/plugins";
 import { getRichElements } from "@/components/editor/elements";
-import { useImperativeHandle, forwardRef } from "react";
+import { ComposerToolbarButtons } from "./composer-toolbar-buttons";
 
 export interface ForumEditorHandle {
   getContentJson: () => any;
@@ -20,13 +21,13 @@ interface ForumEditorProps {
   readOnly?: boolean;
   value?: string;
   onChange?: (value: any) => void;
+  editorRef?: (handle: ForumEditorHandle) => void;
 }
 
 function EditorWithMarkdown({ onReady }: { onReady: (handle: ForumEditorHandle) => void }) {
   const editor = useEditorRef();
   const { api } = useEditorPlugin(MarkdownPlugin);
 
-  // Expose methods to parent
   onReady({
     getContentJson: () => editor.children,
     getContentMarkdown: () => {
@@ -41,11 +42,18 @@ function EditorWithMarkdown({ onReady }: { onReady: (handle: ForumEditorHandle) 
   return null;
 }
 
-export function ForumEditor({ readOnly = false, value, onChange, editorRef }: ForumEditorProps & { editorRef?: (handle: ForumEditorHandle) => void }) {
+export function ForumEditor({ readOnly = false, value, onChange, editorRef }: ForumEditorProps) {
   const parsedValue = value ? JSON.parse(value) : [{ type: "p", children: [{ text: "" }] }];
 
+  // Get plugins and filter out Title/Subtitle/Dnd for forum editor
+  const allPlugins = getEditorPlugins("forum-editor", undefined, readOnly, false);
+  const forumPlugins = allPlugins.filter((p: any) => {
+    const key = p?.key || p?.plugin?.key || "";
+    return key !== "title" && key !== "subtitle" && key !== "dnd";
+  });
+
   const editor = createPlateEditor({
-    plugins: [...getEditorPlugins("forum-editor", undefined, readOnly, false)],
+    plugins: forumPlugins,
     override: { components: getRichElements() },
     value: parsedValue,
   });
@@ -57,6 +65,13 @@ export function ForumEditor({ readOnly = false, value, onChange, editorRef }: Fo
         readOnly={readOnly}
         onChange={({ value }) => { onChange?.(value); }}
       >
+        {/* Slim toolbar — no AI, no color pickers */}
+        {!readOnly && (
+          <FixedToolbar>
+            <ComposerToolbarButtons />
+          </FixedToolbar>
+        )}
+
         <EditorContainer>
           <Editor variant="fullWidth" className="!px-0" />
         </EditorContainer>

@@ -14,6 +14,7 @@ interface ComposerState {
   mode: "thread" | "reply";
   prefilledCategory?: string;
   threadRef?: ThreadRef;
+  quotedText?: string;
 }
 
 interface ComposerActions {
@@ -34,8 +35,8 @@ export function ComposerContextProvider({ children }: { children: ReactNode }) {
     setState({ status: "open", mode: "thread", prefilledCategory: category });
   }, []);
 
-  const openReply = useCallback((threadRef: ThreadRef) => {
-    setState({ status: "open", mode: "reply", threadRef });
+  const openReply = useCallback((threadRef: ThreadRef, quotedText?: string) => {
+    setState({ status: "open", mode: "reply", threadRef, quotedText });
   }, []);
 
   const close = useCallback(() => {

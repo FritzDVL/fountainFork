@@ -24,6 +24,8 @@ for the delta (what's different for the forum).
 
 **Forum delta:** Different feed (our constants, not blog group), different
 attributes (forumCategory/forumThreadId), different Supabase table.
+Uses `title_link` display mode (Fountain's Distribution setting) to
+prevent content leaking to other apps' feeds.
 
 ---
 
@@ -69,9 +71,13 @@ attributes (forumCategory/forumThreadId), different Supabase table.
 | Feed filtering | Feed context + filter | `src/contexts/feed-context.tsx` |
 | Feed display | `FeedArticles` | `src/components/feed/feed-articles.tsx` |
 | Search | `FeedSearch` | `src/components/feed/feed-search.tsx` |
+| Tag rendering | `PostTags` | `src/components/post/post-tags.tsx` |
 
-**Forum delta:** Category badges, tag pills, filter toolbar. New UI but
-same data patterns.
+**Forum delta:** Category badges with colors, tag pills, filter toolbar
+with dropdowns. Data from Supabase `forum_threads` (not Lens feed).
+Reuses `get-threads.ts` query patterns from Phase 4. No new DB schema
+needed — `tags TEXT[]` column exists from Phase 3. Token gating deferred
+until token contract exists.
 
 ---
 
