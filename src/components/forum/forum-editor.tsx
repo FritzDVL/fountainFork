@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { createPlateEditor, Plate, useEditorPlugin, useEditorRef } from "@udecode/plate/react";
 import { MarkdownPlugin } from "@udecode/plate-markdown";
 import { DndProvider } from "react-dnd";
@@ -43,20 +44,22 @@ function EditorWithMarkdown({ onReady }: { onReady: (handle: ForumEditorHandle) 
 }
 
 export function ForumEditor({ readOnly = false, value, onChange, editorRef }: ForumEditorProps) {
-  const parsedValue = value ? JSON.parse(value) : [{ type: "p", children: [{ text: "" }] }];
+  const editor = useMemo(() => {
+    const parsedValue = value ? JSON.parse(value) : [{ type: "p", children: [{ text: "" }] }];
+    const allPlugins = getEditorPlugins("forum-editor", undefined, readOnly, false);
+    const forumPlugins = allPlugins.filter((p: any) => {
+      const key = p?.key || p?.plugin?.key || "";
+      return key !== "title" && key !== "subtitle" && key !== "dnd" && key !== "trailingBlock" && key !== "leadingBlock" && key !== "placeholder";
+    });
 
-  // Get plugins and filter out Title/Subtitle/Dnd for forum editor
-  const allPlugins = getEditorPlugins("forum-editor", undefined, readOnly, false);
-  const forumPlugins = allPlugins.filter((p: any) => {
-    const key = p?.key || p?.plugin?.key || "";
-    return key !== "title" && key !== "subtitle" && key !== "dnd";
-  });
-
-  const editor = createPlateEditor({
-    plugins: forumPlugins,
-    override: { components: getRichElements() },
-    value: parsedValue,
-  });
+    return createPlateEditor({
+      plugins: forumPlugins,
+      override: { components: getRichElements() },
+      value: parsedValue,
+    });
+    // Only recreate when value or readOnly changes — NOT on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, readOnly]);
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -73,8 +76,23 @@ export function ForumEditor({ readOnly = false, value, onChange, editorRef }: Fo
         )}
 
         <EditorContainer>
-          <Editor variant="fullWidth" className="!px-0" />
+          <Editor variant="fullWidth" className="!px-4 !pt-3 !pb-8 !min-h-0" placeholder={readOnly ? undefined : "Write your post here..."} />
         </EditorContainer>
+
+        {/* Fix invisible list markers */}
+        <style>{`
+          [data-plate-editor] [style*="list-style-type"] {
+            padding-left: 1.5em;
+          }
+          [data-plate-editor] [style*="list-style-type"]::before {
+            color: currentColor;
+          }
+          [data-plate-editor] ul, [data-plate-editor] ol {
+            padding-left: 1.5em;
+          }
+          [data-plate-editor] ul { list-style-type: disc; }
+          [data-plate-editor] ol { list-style-type: decimal; }
+        `}</style>
 
         {!readOnly && (
           <>

@@ -15,7 +15,6 @@ export function BoardCategoryRow({ category }: { category: BoardCategory }) {
       <div className="hidden md:flex items-center gap-6 text-xs text-muted-foreground ml-4">
         <div className="text-center min-w-[48px]">
           <div className="font-semibold text-foreground">{category.threadCount}</div>
-          <div>threads</div>
         </div>
         {category.latestActivity && (
           <div className="text-right min-w-[56px]">

@@ -43,8 +43,8 @@ All specs were derived from merging:
 | 6 | [Publish Flow](./06-PUBLISH-FLOW.md) | Thread creation + reply publishing | ✅ DONE | 2026-04-06 |
 | 7 | [Forum Features](./07-FORUM-FEATURES.md) | Voting, moderation, quote-reply | ✅ DONE | 2026-04-06 |
 | 8 | [Research Section](./08-RESEARCH.md) | Token-gated research with categories + tags | ✅ DONE | 2026-04-07 |
-| 9 | [Recovery & Sync](./09-RECOVERY-SYNC.md) | Background sync + full recovery script | ⬜ Next | — |
-| 10 | [Polish & Deploy](./10-POLISH-DEPLOY.md) | SEO, caching, error handling, production | ⬜ Blocked | — |
+| 9 | [Recovery & Sync](./09-RECOVERY-SYNC.md) | Background sync + full recovery script | ✅ DONE | 2026-04-07 |
+| 10 | [Polish & Deploy](./10-POLISH-DEPLOY.md) | SEO, caching, error handling, production | ⬜ Next | — |
 
 ## Dependency Graph
 

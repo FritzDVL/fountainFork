@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Pin, Lock, MessageSquare, Eye } from "lucide-react";
+import { Pin, Lock, MessageSquare } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
 import type { ThreadListItem } from "@/lib/forum/get-threads";
 

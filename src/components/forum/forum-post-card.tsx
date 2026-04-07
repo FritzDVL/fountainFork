@@ -12,6 +12,7 @@ interface ForumPostCardProps {
   downvotes: number;
   position: number;
   isRoot?: boolean;
+  title?: string;
   replyButton?: React.ReactNode;
   modActions?: React.ReactNode;
   publicationId?: string;
@@ -26,6 +27,7 @@ export function ForumPostCard({
   upvotes,
   position,
   isRoot = false,
+  title,
   replyButton,
   modActions,
   publicationId,
@@ -55,6 +57,9 @@ export function ForumPostCard({
       </div>
 
       {/* Content */}
+      {isRoot && title && (
+        <div className="text-base font-bold mb-2">{title}</div>
+      )}
       <ForumPostContent contentJson={contentJson} />
 
       {/* Footer: heart + reply + mod */}

@@ -26,14 +26,26 @@ export default async function ThreadPage({ params }: Props) {
     <div className="mx-auto w-full max-w-[960px] px-4 py-8">
       {/* Breadcrumb */}
       <div className="text-sm text-muted-foreground mb-4">
-        <Link href="/boards" className="hover:underline hover:text-foreground">Boards</Link>
-        {" / "}
-        <Link
-          href={`/boards/${thread.feed}?category=${thread.category}`}
-          className="hover:underline hover:text-foreground"
-        >
-          {category?.name || thread.category}
-        </Link>
+        {thread.feed === "research" ? (
+          <>
+            <Link href="/research" className="hover:underline hover:text-foreground">Research</Link>
+            {" / "}
+            <Link href={`/research?category=${thread.category}`} className="hover:underline hover:text-foreground">
+              {category?.name || thread.category}
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link href="/boards" className="hover:underline hover:text-foreground">Boards</Link>
+            {" / "}
+            <Link
+              href={`/boards/${thread.feed}?category=${thread.category}`}
+              className="hover:underline hover:text-foreground"
+            >
+              {category?.name || thread.category}
+            </Link>
+          </>
+        )}
       </div>
 
       {/* Thread header */}
@@ -59,6 +71,7 @@ export default async function ThreadPage({ params }: Props) {
         downvotes={thread.downvotes}
         position={0}
         isRoot
+        title={thread.title}
         publicationId={thread.rootPublicationId}
         replyButton={<ReplyButton rootPublicationId={thread.rootPublicationId} feed={thread.feed as FeedType} threadTitle={thread.title} quotedText={thread.contentJson ? "Original post content" : undefined} quotedAuthor={thread.authorUsername || undefined} quotedPosition={0} />}
       />

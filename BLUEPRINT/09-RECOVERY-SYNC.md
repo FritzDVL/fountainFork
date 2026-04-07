@@ -1,27 +1,99 @@
-# Phase 9: Recovery & Sync
+# Phase 9: Recovery & Sync (UPDATED)
 
 ## Goal
 
 Build the safety net: a full recovery script that reconstructs all forum
-data from Lens if Supabase is lost, and a background sync job that keeps
-Supabase in sync with onchain state. By the end, the forum is resilient
-to data loss.
+data from Lens Protocol if Supabase is lost, and a background sync job
+that keeps Supabase current. By the end, the forum is resilient to data
+loss, server failure, and even hostile attacks on the database.
 
 ## Depends On
 
-Phase 6 (publish flow exists — threads and replies on Lens)
+Phase 6 ✅ (posts exist on Lens with metadata attributes)
+Phase 8 ✅ (tags exist on research threads)
 
 ---
 
 ## Why This Matters
 
 ```
-Source of truth:  Lens Protocol + Grove Storage (permanent, decentralized)
-Speed layer:      Supabase (fast reads, search, view counts)
+PERMANENT LAYER (cannot be destroyed):
+  Lens Protocol  →  every post is an onchain article
+  Grove Storage  →  full content stored permanently
+  Metadata       →  forumCategory, forumThreadId, contentJson, tags
+
+REPLACEABLE LAYER (can be rebuilt from permanent layer):
+  Supabase       →  thread structure, view counts, search index
+  VPS            →  the server running the app
 ```
 
-If Supabase is wiped → recovery script reads Lens → rebuilds everything.
-If a post is made via Hey.xyz → sync job catches it → adds to Supabase.
+If Supabase is wiped, hacked, or corrupted:
+  → Run recovery script
+  → Reads every post from Lens Feeds
+  → Reconstructs forum_threads + forum_thread_replies
+  → Forum is back online
+
+If the entire VPS is destroyed:
+  → Spin up new server anywhere
+  → Clone the repo, set up Supabase
+  → Run recovery script
+  → Everything is restored
+
+The forum cannot be permanently killed as long as Lens Protocol exists.
+
+---
+
+## What We Store on Lens (the recovery keys)
+
+Every post we publish includes metadata attributes that act as
+recovery instructions. Here's exactly what each post type stores:
+
+### Thread Root (published via `publish-thread.ts`)
+
+```
+Lens article metadata:
+  title:      "My Thread Title"
+  content:    "My Thread Title — https://forum.societyprotocol.io"  (display only)
+  tags:       ["consensus", "hunting", "game-theory"]               (category + tags)
+  attributes:
+    - forumCategory: "consensus"          ← identifies this as a thread root
+    - contentJson: { ... }                ← full Plate.js document
+  feed:       COMMONS_FEED or RESEARCH_FEED
+```
+
+### Reply (published via `publish-reply.ts`)
+
+```
+Lens article metadata:
+  title:      ""
+  content:    "Reply — https://forum.societyprotocol.io"  (display only)
+  attributes:
+    - forumThreadId: "0x1234...abcd"      ← root publication ID (links to parent)
+    - contentJson: { ... }                ← full Plate.js document
+  feed:       same feed as parent thread
+```
+
+### How Recovery Reads This
+
+```
+For each post in a Feed:
+  if post has "forumCategory" attribute → it's a THREAD ROOT
+  if post has "forumThreadId" attribute → it's a REPLY
+  if post has neither                   → it's not a forum post (skip)
+```
+
+---
+
+## Fountain Code to Study First
+
+| Need | Fountain file | What to learn |
+|---|---|---|
+| Fetch posts from feed | Used throughout app | `fetchPosts()` with feed filter |
+| Read metadata attributes | `src/app/p/[user]/[post]/page.tsx` | `post.metadata.attributes` |
+| Service client (no cookies) | `src/lib/db/service.ts` | For scripts running outside browser |
+| Lens client setup | `src/lib/lens/client.ts` | `getLensClient()` pattern |
+
+---
 
 ## Scripts
 
@@ -29,90 +101,126 @@ If a post is made via Hey.xyz → sync job catches it → adds to Supabase.
 
 **File:** `scripts/recover-forum.ts`
 
-Run when: Supabase is empty, corrupted, or migrated to a new project.
+**When to run:** Supabase is empty, corrupted, or migrated to new project.
 
-**Uses:** Service client (`createClient(URL, SERVICE_KEY)` from `@supabase/supabase-js`).
-NOT the server client (no cookies in scripts).
+**How it works:**
 
-**Algorithm:**
 ```
-For each feed (commons, research):
-  1. fetchPosts(client, { filter: { feeds: [{ feed: ADDRESS }] } })
-     → paginate through ALL posts
-  2. For each post with `forumCategory` attribute:
-     → Thread root
-     → Read forumCategory value (default: "off-topic")
-     → UPSERT into forum_threads
-  3. For each post with `forumThreadId` attribute:
-     → Reply — value is the root publication ID
-     → Find/create parent thread
-     → UPSERT into forum_thread_replies
-     → Order by timestamp to assign positions
-  4. Recount category thread_counts
+Step 1: Connect to Lens (public client, no auth needed)
+Step 2: Connect to Supabase (service client with SERVICE_ROLE_KEY)
+
+Step 3: For each feed (commons, research):
+  Paginate through ALL posts in the feed:
+    fetchPosts(client, {
+      filter: { feeds: [{ feed: evmAddress(FEED_ADDRESS) }] }
+    })
+
+Step 4: Classify each post:
+  Read post.metadata.attributes array
+  Find attribute with key "forumCategory" → THREAD ROOT
+  Find attribute with key "forumThreadId" → REPLY
+  Neither → skip (not a forum post)
+
+Step 5: Process thread roots:
+  For each thread root:
+    Extract: title, forumCategory, contentJson, tags
+    Determine feed from which Feed we fetched it
+    Extract author from post.author
+    UPSERT into forum_threads (conflict on root_publication_id)
+
+Step 6: Process replies:
+  Sort all replies by post.timestamp (ascending)
+  For each reply:
+    Extract: forumThreadId (= parent's publication ID), contentJson
+    Look up parent thread in forum_threads
+    Calculate position (count existing replies + 1)
+    UPSERT into forum_thread_replies (conflict on publication_id)
+
+Step 7: Recount statistics:
+  UPDATE forum_threads SET reply_count = (SELECT count FROM forum_thread_replies)
+  UPDATE forum_categories SET thread_count = (SELECT count FROM forum_threads)
+
+Step 8: Log results:
+  "Recovered X threads, Y replies from Z total posts"
 ```
 
-NOTE: Recovery does NOT use `commentOn` or `fetchPostReferences`.
-Thread structure is reconstructed from metadata attributes only:
-- `forumCategory` → this is a thread root
-- `forumThreadId` → this is a reply (value = root's publication ID)
+**Key details:**
+- Uses Lens public client (no authentication needed to READ)
+- Uses Supabase service client (bypasses RLS for bulk inserts)
+- UPSERT with `onConflict` makes it safe to run multiple times
+- Content comes from `contentJson` attribute, NOT from `content` field
+  (because `content` field only has "Title — URL" due to Lens Display mode)
+- Tags extracted from Lens metadata `tags` array, first tag is the category
 
-**Content cache rebuild:**
-- Read `contentJson` attribute from each publication's metadata
-- Store in `content_json` JSONB column
-- If attribute missing, fetch `contentUri` from Grove and parse
-
-**Idempotent:** Uses UPSERT with `onConflict` on unique columns.
-Safe to run multiple times.
+**Pagination:**
+Lens `fetchPosts` returns paginated results. The script must loop:
+```ts
+let cursor = undefined;
+while (true) {
+  const result = await fetchPosts(client, { filter, cursor });
+  // process result.items
+  if (!result.pageInfo.next) break;
+  cursor = result.pageInfo.next;
+}
+```
 
 ### 9.2 Incremental Sync Script
 
-**File:** `scripts/sync-forum.ts` (or `src/app/api/forum/sync/route.ts`)
+**File:** `scripts/sync-forum.ts`
 
-Run when: every 5 minutes via cron.
+**When to run:** Every 5 minutes via system cron on VPS.
 
-**Uses:** Service client.
+**How it works:**
 
-**Algorithm:**
 ```
-For each feed:
-  1. Fetch recent posts (last 100)
-  2. For each post with `forumCategory` attribute:
-     → Check if exists in forum_threads
-     → If missing: insert as thread root
-  3. For each post with `forumThreadId` attribute:
-     → Check if exists in forum_thread_replies
-     → If missing: find parent thread, calculate position, insert
-  4. Check for deleted posts (post.isDeleted):
-     → Mark is_hidden = true in Supabase
-  5. Check for edited posts (post.updatedAt > supabase.updated_at):
-     → Refresh content cache
+Step 1: Fetch recent posts from each feed (last 50)
+Step 2: For each post with forumCategory attribute:
+  Check if root_publication_id exists in forum_threads
+  If missing → insert (new thread published elsewhere or missed)
+Step 3: For each post with forumThreadId attribute:
+  Check if publication_id exists in forum_thread_replies
+  If missing → insert (new reply)
+Step 4: Check for deleted posts:
+  If post.isDeleted → mark is_hidden = true in Supabase
+Step 5: Log: "Synced: X new threads, Y new replies"
 ```
 
-### 9.3 Content Cache Backfill
+**Why this catches external posts:**
+If someone publishes to our Feed using a different app (Hey.xyz,
+or a fork of our forum), the post lands in the same Lens Feed.
+The sync script picks it up and adds it to Supabase. The forum
+shows it automatically.
 
-**File:** `scripts/cache-content.ts`
+### 9.3 Cron Setup on VPS
 
-Run when: after adding `content_json` column to existing data, or after
-recovery script (which may not have all content cached).
+**File:** System crontab on VPS (72.61.119.100)
 
-**Algorithm:**
-```
-1. Query forum_threads WHERE content_json IS NULL (limit 100)
-2. For each: fetchPost → read contentJson attribute → UPDATE
-3. Query forum_thread_replies WHERE content_json IS NULL (limit 500)
-4. For each: fetchPost → read contentJson attribute → UPDATE
+```bash
+# Edit crontab
+crontab -e
+
+# Add sync job (every 5 minutes)
+*/5 * * * * cd /opt/society-forum && npx tsx scripts/sync-forum.ts >> /var/log/forum-sync.log 2>&1
 ```
 
 ---
 
-## Deployment Options for Sync
+## What Recovery CANNOT Restore
 
-| Option | How | Best For |
+| Data | Recoverable? | Why |
 |---|---|---|
-| Vercel Cron | `vercel.json` → `{ "crons": [{ "path": "/api/forum/sync", "schedule": "*/5 * * * *" }] }` | Vercel hosting |
-| System Cron | `*/5 * * * * npx tsx scripts/sync-forum.ts` | VPS hosting |
-| Supabase Edge Function | Deno function + pg_cron trigger | Supabase-native |
-| GitHub Actions | Scheduled workflow every 5 min | Free tier |
+| Thread content | ✅ Yes | `contentJson` attribute on Lens |
+| Thread structure | ✅ Yes | `forumCategory` + `forumThreadId` attributes |
+| Author info | ✅ Yes | `post.author` on Lens |
+| Tags | ✅ Yes | `tags` array in Lens metadata |
+| Timestamps | ✅ Yes | `post.timestamp` on Lens |
+| View counts | ❌ No | Supabase-only, not stored on Lens |
+| Pin/lock status | ❌ No | Supabase-only moderation flags |
+| Vote counts | ⚠️ Partial | Lens reactions exist but we'd need to re-fetch per post |
+| Hidden status | ❌ No | Supabase-only (but deleted posts on Lens are detectable) |
+
+View counts and moderation state are lost on full recovery. This is
+acceptable — they're operational data, not content.
 
 ---
 
@@ -120,13 +228,26 @@ recovery script (which may not have all content cached).
 
 | Case | Handling |
 |---|---|
-| Post made via Hey.xyz | Sync catches it, assigns default category |
+| Post made via Hey.xyz to our Feed | Sync catches it, `forumCategory` attribute likely missing → default to "off-topic" |
 | Post deleted on Lens | Sync marks `is_hidden = true` |
-| Post edited on Lens | Sync refreshes content cache |
-| Two replies at same time | Position may have gap — acceptable, recovery re-numbers |
-| `forumCategory` attribute missing | Default to "off-topic" |
-| `contentJson` attribute missing | Fetch from Grove via `contentUri` |
-| Supabase fully wiped | Run full recovery script |
+| `contentJson` attribute missing | Fetch content from Grove via `post.metadata.contentUri` and parse |
+| `forumCategory` missing on thread | Default to "off-topic" category |
+| Two replies with same timestamp | Position assigned by order received — minor gap acceptable |
+| Recovery run twice | UPSERT prevents duplicates — completely safe |
+| Supabase partially corrupted | Recovery fills gaps without destroying existing data |
+| `pending-` publication IDs (Phase 6b) | If optimistic publish is implemented later, sync detects stuck pending IDs and can retry |
+
+---
+
+## Execution Order
+
+| Step | What | Effort |
+|---|---|---|
+| 9.1 | Full recovery script | Medium |
+| 9.2 | Incremental sync script | Medium |
+| 9.3 | Cron setup on VPS | Small |
+| 9.4 | Test: wipe Supabase, run recovery, verify | — |
+| 9.5 | Test: publish via different method, verify sync catches it | — |
 
 ---
 
@@ -138,19 +259,46 @@ recovery script (which may not have all content cached).
 | T9.2 | Thread count matches Lens post count | No missing threads |
 | T9.3 | Reply positions are sequential | Ordered by timestamp |
 | T9.4 | Category assignments correct | Read from `forumCategory` attribute |
-| T9.5 | `content_json` populated | Plate.js JSON in JSONB column |
-| T9.6 | Forum pages work after recovery | Landing, thread list, thread detail all render |
-| T9.7 | Publish a post via Hey.xyz | Sync picks it up within 5 minutes |
-| T9.8 | Delete a post on Lens | Sync marks it hidden |
-| T9.9 | Run recovery twice | No duplicates (UPSERT is idempotent) |
-| T9.10 | Sync cron runs on schedule | Logs confirm execution every 5 min |
-| T9.11 | Cache backfill fills NULL content_json | All rows populated |
+| T9.5 | Tags populated on research threads | Extracted from Lens metadata tags |
+| T9.6 | `content_json` populated | Plate.js JSON in JSONB column |
+| T9.7 | Forum pages work after recovery | Landing, thread list, thread detail all render |
+| T9.8 | Run recovery twice | No duplicates (UPSERT is idempotent) |
+| T9.9 | Sync cron runs on VPS | Logs confirm execution every 5 min |
+| T9.10 | Post published externally | Sync picks it up within 5 minutes |
 
-## Files Created
+## Files to Create
 
 ```
-scripts/recover-forum.ts          — full recovery from Lens
-scripts/sync-forum.ts             — incremental sync (also usable as API route)
-scripts/cache-content.ts          — backfill content_json cache
-src/app/api/forum/sync/route.ts   — cron endpoint (if using Vercel)
+scripts/recover-forum.ts     — full recovery from Lens
+scripts/sync-forum.ts        — incremental sync (cron job)
 ```
+
+
+---
+
+## Completion Notes (2026-04-07)
+
+### What Was Done
+- Step 9.1: `scripts/recover-forum.ts` — full recovery from Lens
+- Step 9.2: `scripts/sync-forum.ts` — incremental sync for cron
+- Step 9.3: Cron setup deferred to Phase 10 (VPS deployment)
+
+### Files Created
+```
+scripts/recover-forum.ts     ✅ Full recovery
+scripts/sync-forum.ts        ✅ Incremental sync
+```
+
+### Future Refinement: Persistent Operational Data
+
+View counts, pin/lock status, vote counts, and hidden status are
+currently Supabase-only and lost on full recovery. Plan to persist
+these on a web3 service (IPFS, Ceramic, or custom onchain storage)
+so they survive recovery. This is post-Phase 10 work.
+
+| Data | Current storage | Future storage |
+|---|---|---|
+| View counts | Supabase only | Web3 service TBD |
+| Pin/lock status | Supabase only | Web3 service TBD |
+| Vote counts | Lens reactions (partial) | Web3 service TBD |
+| Hidden status | Supabase only | Web3 service TBD |
