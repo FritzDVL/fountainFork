@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/db/server";
+import { createServiceClient } from "@/lib/db/service";
 import { isAdmin } from "@/lib/auth/is-admin";
 import { getSession } from "@/lib/auth/get-session";
 import { NextRequest, NextResponse } from "next/server";
@@ -12,7 +12,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     const { action } = await req.json();
-    const db = await createClient();
+    const db = await createServiceClient();
 
     if (action === "pin" || action === "unpin") {
       await db.from("forum_threads").update({ is_pinned: action === "pin" }).eq("id", params.id);
