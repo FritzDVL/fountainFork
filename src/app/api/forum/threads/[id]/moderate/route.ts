@@ -6,7 +6,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getSession();
-    if (!session?.address || !(await isAdmin(session.address))) {
+    const address = session?.loggedInAs?.account?.address;
+    if (!address || !(await isAdmin(address))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
