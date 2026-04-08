@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/db/server";
+import { createForumServiceClient } from "@/lib/db/forum-service";
 import { LANDING_SECTIONS } from "./categories";
 
 export interface BoardCategory {
@@ -19,7 +19,7 @@ export interface BoardSection {
 }
 
 export async function getBoardSections(): Promise<BoardSection[]> {
-  const db = await createClient();
+  const db = await createForumServiceClient();
 
   const { data: dbCategories } = await db
     .from("forum_categories")

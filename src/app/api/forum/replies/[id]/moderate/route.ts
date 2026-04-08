@@ -1,4 +1,4 @@
-import { createServiceClient } from "@/lib/db/service";
+import { createForumServiceClient } from "@/lib/db/forum-service";
 import { isAdmin } from "@/lib/auth/is-admin";
 import { getSession } from "@/lib/auth/get-session";
 import { NextRequest, NextResponse } from "next/server";
@@ -11,7 +11,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const db = await createServiceClient();
+    const db = await createForumServiceClient();
     await db.from("forum_thread_replies").update({ is_hidden: true }).eq("id", params.id);
 
     return NextResponse.json({ success: true });

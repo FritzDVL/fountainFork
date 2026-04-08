@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/db/server";
+import { createForumServiceClient } from "@/lib/db/forum-service";
 import type { ThreadListItem } from "./get-threads";
 
 interface ResearchFilters {
@@ -17,7 +17,7 @@ interface ResearchResult {
 
 export async function getResearchThreads(filters: ResearchFilters = {}): Promise<ResearchResult> {
   const { category, tag, page = 1, pageSize = 20 } = filters;
-  const db = await createClient();
+  const db = await createForumServiceClient();
   const offset = (page - 1) * pageSize;
 
   // Build query

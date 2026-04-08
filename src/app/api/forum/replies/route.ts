@@ -1,10 +1,10 @@
-import { createClient } from "@/lib/db/server";
+import { createForumServiceClient } from "@/lib/db/forum-service";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const db = await createClient();
+    const db = await createForumServiceClient();
 
     const { data: thread, error: threadError } = await db
       .from("forum_threads")

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/db/server";
+import { createForumServiceClient } from "@/lib/db/forum-service";
 
 export interface ThreadDetail {
   id: string;
@@ -34,7 +34,7 @@ export interface ThreadReply {
 }
 
 export async function getThreadDetail(rootPublicationId: string) {
-  const db = await createClient();
+  const db = await createForumServiceClient();
 
   const { data: thread } = await db
     .from("forum_threads")

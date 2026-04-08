@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/db/server";
+import { createForumServiceClient } from "@/lib/db/forum-service";
 
 export interface ThreadListItem {
   id: string;
@@ -22,7 +22,7 @@ export async function getThreadsByCategory(
   page = 1,
   pageSize = 20,
 ): Promise<{ threads: ThreadListItem[]; total: number }> {
-  const db = await createClient();
+  const db = await createForumServiceClient();
   const offset = (page - 1) * pageSize;
 
   const { data, count, error } = await db
