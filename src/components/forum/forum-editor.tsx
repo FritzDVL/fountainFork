@@ -76,7 +76,7 @@ export function ForumEditor({ readOnly = false, value, onChange, editorRef }: Fo
         )}
 
         <EditorContainer>
-          <Editor variant="fullWidth" className="!px-4 !pt-3 !pb-8 !min-h-0" placeholder={readOnly ? undefined : "Write your post here..."} />
+          <Editor variant="fullWidth" className="!px-4 !pt-3 !pb-8 !min-h-0" />
         </EditorContainer>
 
         {/* Fix invisible list markers */}

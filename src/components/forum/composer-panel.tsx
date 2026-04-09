@@ -95,6 +95,7 @@ export function ComposerPanel() {
           state.threadRef.rootPublicationId,
           state.threadRef.feed,
           walletClient,
+          state.threadRef.title,
         );
         toast.dismiss(pending);
 

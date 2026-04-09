@@ -132,7 +132,6 @@ const UserPostLayout = async ({
   if (post.isDeleted) {
     return (
       <BlogTheme initialTheme={themeName} customCss={customCss}>
-        <BlogHeader title={title} icon={icon} username={blogAddress} />
         <ArticleLayout>
           <PostDeletedView />
         </ArticleLayout>
@@ -142,7 +141,6 @@ const UserPostLayout = async ({
 
   return (
     <BlogTheme initialTheme={themeName} customCss={customCss}>
-      <BlogHeader title={title} icon={icon} username={blogAddress} />
       <ArticleLayout>
         <GradientBlur />
         {children}

@@ -94,11 +94,9 @@ export const UserMenu = ({ session, showDropdown = false }: { session: MeResult 
         <DropdownMenuContent align="end" className="w-48">
           {session && (
             <>
-              <AnimatedMenuItem href="/featured" icon={HomeIcon}>
+              <AnimatedMenuItem href="/" icon={HomeIcon}>
                 Home
               </AnimatedMenuItem>
-
-              {username && <BlogDropdownMenu username={username} />}
 
               <AnimatedMenuItem href={`/u/${username}`} icon={UserIcon}>
                 Profile
@@ -121,10 +119,6 @@ export const UserMenu = ({ session, showDropdown = false }: { session: MeResult 
 
           {session && (
             <>
-              <AnimatedMenuItem href={`/u/${username}/drafts`} icon={SquarePenIcon}>
-                Drafts
-              </AnimatedMenuItem>
-
               <AnimatedMenuItem href={getSettingsPath()} icon={SettingsGearIcon}>
                 Settings
               </AnimatedMenuItem>

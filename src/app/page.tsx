@@ -1,33 +1,27 @@
-import type { AnyPost, PostId } from "@lens-protocol/client";
-import { fetchPosts } from "@lens-protocol/client/actions";
-import { LandingPageClient } from "@/components/misc/landing-page";
-import { createServiceClient } from "@/lib/db/service";
-import { getLensClient } from "@/lib/lens/client";
+import { getBoardSections } from "@/lib/forum/get-board-sections";
+import { LANGUAGE_BOARDS } from "@/lib/forum/categories";
+import { BoardSectionList } from "@/components/forum/board-section-list";
+import { BoardSectionGrid } from "@/components/forum/board-section-grid";
+import { LanguageBoardCards } from "@/components/forum/language-board-cards";
+import { HomeWrapper } from "@/components/forum/home-wrapper";
+
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  let favoritePosts: AnyPost[] = [];
+  const sections = await getBoardSections();
 
-  try {
-    const supabase = await createServiceClient();
-    const { data: curatedData } = await supabase
-      .from("curated")
-      .select("slug")
-      .order("created_at", { ascending: false })
-      .limit(9);
-
-    const postIds = curatedData?.map((item) => item.slug).filter(Boolean) || [];
-
-    if (postIds.length > 0) {
-      const lens = await getLensClient();
-      const postsResult = await fetchPosts(lens, { filter: { posts: postIds as PostId[] } });
-
-      if (postsResult.isOk()) {
-        favoritePosts = [...postsResult.value.items];
-      }
-    }
-  } catch (error) {
-    console.error("Error fetching favorites:", error);
-  }
-
-  return <LandingPageClient favoritePosts={favoritePosts} />;
+  return (
+    <HomeWrapper>
+      <div className="mx-auto w-full max-w-[960px] px-4 py-8">
+        {sections.map((section) =>
+          section.layout === "grid" ? (
+            <BoardSectionGrid key={section.id} section={section} />
+          ) : (
+            <BoardSectionList key={section.id} section={section} />
+          ),
+        )}
+        <LanguageBoardCards boards={LANGUAGE_BOARDS} />
+      </div>
+    </HomeWrapper>
+  );
 }

@@ -1,4 +1,4 @@
-export const themeNames = ["editorial", "modern"] as const;
+export const themeNames = ["modern", "editorial"] as const;
 export type ThemeType = (typeof themeNames)[number];
 
 export const isValidTheme = (theme: unknown): theme is ThemeType =>

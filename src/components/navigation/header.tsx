@@ -36,7 +36,7 @@ export const Header = ({ session }: { session: MeResult | null }) => {
   const yjsState = useYjsState((state) => state.getState(documentId) ?? { status: "disconnected" as ConnectionStatus });
   const isCollaborative = yjsState.isCollaborative ?? false;
   const isAuthenticated = session !== null;
-  const logoLink = isAuthenticated ? "/featured" : "/";
+  const logoLink = "/";
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -74,7 +74,6 @@ export const Header = ({ session }: { session: MeResult | null }) => {
         {isBlogPage && blogData && <BlogEmailSubscribe blogData={blogData} variant="default" />}
         {isWritePage && <PublishMenu documentId={documentId} />}
         {isWritePage && <EditorOptionsDropdown documentId={documentId} collaborative={isCollaborative} />}
-        {!isWritePage && !isMobile && !isForumPage && <DraftCreateButton />}
         {!isWritePage && !isMobile && isForumPage && (
           <Link
             href="/research"

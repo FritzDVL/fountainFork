@@ -20,6 +20,7 @@ export async function publishReply(
   threadRootPublicationId: string,
   threadFeed: FeedType,
   walletClient: any,
+  threadTitle?: string,
 ): Promise<PublishReplyResult> {
   const { username, address } = await getUserAccount();
   if (!username || !address) return { success: false, error: "Not logged in" };
@@ -30,6 +31,7 @@ export async function publishReply(
   const attributes = [
     { key: "contentJson", type: MetadataAttributeType.JSON, value: JSON.stringify(draft.contentJson) },
     { key: "forumThreadId", type: MetadataAttributeType.STRING, value: threadRootPublicationId },
+    ...(threadTitle ? [{ key: "forumThreadTitle", type: MetadataAttributeType.STRING, value: threadTitle }] : []),
   ];
 
   const forumUrl = "https://forum.societyprotocol.io";

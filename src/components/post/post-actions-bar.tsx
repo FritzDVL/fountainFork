@@ -10,7 +10,7 @@ export const PostActionsBar = ({ post, account }: { post: Post; account?: Accoun
   const { actionBarRef } = useActionBar();
   const { likeButton, collectButton, commentButton, bookmarkButton, shareButton } = usePostActionsButtons({ post });
 
-  const leftButtons = [likeButton, collectButton, commentButton];
+  const leftButtons = [likeButton, collectButton];
   const rightButtons = [bookmarkButton, shareButton];
 
   return (
