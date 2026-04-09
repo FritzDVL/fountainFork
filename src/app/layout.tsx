@@ -25,8 +25,8 @@ const libreBaskerville = Libre_Baskerville({
 });
 
 export const metadata = {
-  title: "Fountain",
-  description: "where your writing journey begins...",
+  title: "Society Protocol Forum",
+  description: "A decentralized forum for Society Protocol",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
