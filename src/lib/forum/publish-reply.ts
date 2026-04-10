@@ -7,6 +7,7 @@ import { getLensClient } from "@/lib/lens/client";
 import { storageClient } from "@/lib/lens/storage-client";
 import { getUserAccount } from "@/lib/auth/get-user-profile";
 import { FEED_MAP, type FeedType } from "./constants";
+import { ensureGroupMembership } from "./ensure-group-membership";
 import type { ForumDraft } from "./types";
 
 export interface PublishReplyResult {
@@ -48,6 +49,8 @@ export async function publishReply(
   if (!contentUri) return { success: false, error: "Failed to upload content" };
 
   const feedAddress = FEED_MAP[threadFeed];
+
+  await ensureGroupMembership(lens, threadFeed, walletClient);
 
   // Standalone article — NO commentOn
   const result = await post(lens, {

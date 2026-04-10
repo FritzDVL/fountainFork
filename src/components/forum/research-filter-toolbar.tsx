@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { getCategoriesByFeed } from "@/lib/forum/categories";
 import { useComposer } from "@/hooks/forum/use-composer";
+import { ResearchJoinButton } from "./research-join-button";
 
 interface FilterToolbarProps {
   categoryCounts: Record<string, number>;
@@ -62,13 +63,7 @@ export function ResearchFilterToolbar({ categoryCounts, allTags }: FilterToolbar
       </button>
 
       <div className="ml-auto">
-        <button
-          type="button"
-          onClick={() => openNewThread(researchCategories[0]?.slug)}
-          className="inline-flex items-center h-8 px-3 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-        >
-          + New Topic
-        </button>
+        <ResearchJoinButton openNewThread={() => openNewThread(researchCategories[0]?.slug)} />
       </div>
     </div>
   );

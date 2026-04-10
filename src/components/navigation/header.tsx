@@ -27,7 +27,7 @@ export const Header = ({ session }: { session: MeResult | null }) => {
   const isSettingsPage = pathname.startsWith("/settings");
   const isBlogPage = pathname.startsWith("/b/");
   const isPostPage = pathname.startsWith("/p/");
-  const isForumPage = pathname.startsWith("/boards") || pathname.startsWith("/thread") || pathname.startsWith("/research");
+  const isForumPage = pathname === "/" || pathname.startsWith("/boards") || pathname.startsWith("/thread") || pathname.startsWith("/research");
   const pathSegments = pathname.split("/").filter(Boolean);
   const blogId = isBlogPage && pathSegments.length >= 2 ? pathSegments[1] : undefined;
   const blogSlug = isBlogPage && pathSegments.length >= 3 ? pathSegments[2] : undefined;
